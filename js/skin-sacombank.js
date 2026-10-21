@@ -169,7 +169,15 @@
     const app = esc(p.appName.toUpperCase());
     const item = (l, v) => `<div class="ai"><span>${l}</span><b>${v}</b></div>`;
     let list;
-    if (isIns) {
+    if (S.otpFor === 'claim') {
+      // Xác nhận phương án bồi thường: trang iBaohiem chuyển sang đây, xác thực xong trả kết quả về
+      const c = S.claimOtp;
+      list = `<div class="ah">${app}: Xác nhận phương án bồi thường</div>
+        ${item('Mã hồ sơ:', esc(c.code))}
+        ${item('Nhà bảo hiểm:', esc(INS().provider))}
+        ${item('Tài khoản nhận:', `${esc(c.acct)}<br>${esc(p.customer.name)}`)}
+        ${item('Số tiền bồi thường:', 'VND ' + fmt(c.amount))}`;
+    } else if (isIns) {
       const pr = prod(S.product), plan = pr.plans[S.plan];
       list = `<div class="ah">${app}: Thanh toán phí bảo hiểm</div>
         ${item('Từ tài khoản/thẻ:', esc(p.customer.account))}
@@ -188,7 +196,7 @@
     return `
     <div class="scr sc-auth">
       <div class="sc-auth-nav">
-        <button data-act="back" aria-label="Quay lại">${svg('back', 24, 3)}</button>
+        <button data-act="${S.otpFor === 'claim' ? 'claimOtpBack' : 'back'}" aria-label="Quay lại">${svg('back', 24, 3)}</button>
         <div>Xác thực giao dịch</div><span></span>
       </div>
       <div class="body">
@@ -198,7 +206,7 @@
       </div>
       <div class="sc-auth-f">
         <button class="btn primary" data-act="scAuthOk">Xác nhận</button>
-        <button class="btn white" data-act="scCancel">Hủy giao dịch</button>
+        <button class="btn white" data-act="${S.otpFor === 'claim' ? 'claimOtpBack' : 'scCancel'}">${S.otpFor === 'claim' ? 'Quay lại' : 'Hủy giao dịch'}</button>
       </div>
     </div>`;
   }

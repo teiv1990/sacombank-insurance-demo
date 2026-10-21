@@ -1,0 +1,834 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>iBaohiem · Tra cứu và Bồi thường</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap">
+<style>
+/* Trang Tra cứu và Bồi thường của iBaohiem, app Sacombank Pay mở trong WebView (iframe trong demo) */
+:root{
+  --f-ui:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --p-bg:#f3f4f9; --p-card:#ffffff; --p-ink:#161b2e; --p-muted:#6b7285; --p-line:#e6e9f1;
+  --bank1:#0B56A4; --bank2:#1A73C9; --hub:#16243a; --hub-acc:#4338ca; --p-ai:#7a2ec8; --p-ai-soft:#f4ecfc;
+  --p-ok:#11805a; --p-ok-soft:#e1f4eb; --p-warn:#9a6100; --p-warn-soft:#fff3d9; --p-bad:#b4372f; --p-bad-soft:#fbe6e4;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:var(--f-ui);line-height:1.5}
+button{font-family:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid var(--hub-acc);outline-offset:2px}
+.screen{position:relative;height:100%;overflow:hidden;background:var(--p-bg);color:var(--p-ink);display:flex;flex-direction:column;font-size:13.5px}
+.body{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}
+.foot{flex:none;padding:12px 16px 26px;background:var(--p-card);border-top:1px solid var(--p-line);display:grid;gap:8px}
+.pol{display:flex;gap:11px;align-items:center}
+.pol .ico{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;color:#fff;flex:none}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.pill.ok{background:var(--p-ok-soft);color:var(--p-ok)} .pill.bad{background:var(--p-bad-soft);color:var(--p-bad)} .pill.warn{background:var(--p-warn-soft);color:var(--p-warn)} .pill.ai{background:var(--p-ai-soft);color:var(--p-ai)} .pill.mut{background:#eef0f5;color:var(--p-muted)}
+.cap{text-align:center;color:var(--p-muted);font-size:11.5px}
+/* Hub iBaohiem */
+.hb-head{background:var(--p-card);display:flex;align-items:center;gap:10px;padding:8px 14px 10px;border-bottom:1px solid var(--p-line)}
+.hb-head .ic{background:none;border:0;color:var(--p-ink);padding:4px;display:grid}
+.hb-logo{width:30px;height:30px;border-radius:9px;background:var(--hub);color:#fff;display:grid;place-items:center;font-weight:800;font-size:12px;letter-spacing:-.02em}
+.hb-brand{display:flex;gap:9px;align-items:center;flex:1;min-width:0}
+.hb-brand b{display:block;font-size:14.5px;line-height:1.1} .hb-brand small{color:var(--p-muted);font-size:11px}
+.hb-ver{display:flex;gap:6px;align-items:center;padding:7px 14px;background:#eef1fb;color:var(--hub-acc);font-size:11.5px;font-weight:600}
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--p-card);border-bottom:1px solid var(--p-line)}
+.tabs button{border:0;background:none;padding:12px 6px 10px;font-weight:700;font-size:13px;color:var(--p-muted);border-bottom:2.5px solid transparent;display:flex;gap:6px;justify-content:center;align-items:center}
+.tabs button.on{color:var(--hub-acc);border-color:var(--hub-acc)}
+.tabs .cnt{font:600 10.5px var(--f-mono);background:#eceefb;color:var(--hub-acc);padding:1px 6px;border-radius:6px}
+.hb-body{padding:14px;display:grid;gap:12px;align-content:start}
+.card{background:var(--p-card);border:1px solid var(--p-line);border-radius:16px;padding:14px;display:grid;gap:10px}
+.card.flat{border:0}
+.ttl{font-weight:800;font-size:15px;margin:0}
+.sub{color:var(--p-muted);font-size:12px;margin:0}
+.hsec{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--p-muted);margin:4px 2px -2px}
+.ct{background:var(--p-card);border:1px solid var(--p-line);border-radius:14px;overflow:hidden}
+.ct-row{width:100%;border:0;background:none;text-align:left;display:flex;gap:10px;align-items:center;padding:12px;color:var(--p-ink)}
+.ct-row .tx{flex:1;min-width:0} .ct-row b{display:block;font-size:13.5px} .ct-row small{font:500 11px var(--f-mono);color:var(--p-muted)}
+.chev{color:var(--p-muted);transition:transform .2s} .open .chev{transform:rotate(90deg)}
+.ct-det{border-top:1px solid var(--p-line);padding:12px;display:grid;gap:10px;background:#fafbfd}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:9px 12px}
+.kv .k{font-size:10.5px;color:var(--p-muted);text-transform:uppercase;letter-spacing:.04em} .kv .v{font-weight:700;font-size:12.5px}
+.kv .full{grid-column:1/-1}
+table.bt{width:100%;border-collapse:collapse;font-size:12px}
+table.bt td{padding:7px 0;border-bottom:1px solid var(--p-line);vertical-align:top} table.bt td:last-child{text-align:right;font-weight:700;padding-left:10px;white-space:nowrap}
+.note{font-size:11.5px;padding:9px 11px;border-radius:10px;background:#eef1fb;color:var(--hub-acc);line-height:1.45}
+.note.warn{background:var(--p-warn-soft);color:var(--p-warn)} .note.ok{background:var(--p-ok-soft);color:var(--p-ok)} .note.ai{background:var(--p-ai-soft);color:var(--p-ai)}
+.btn{border:0;border-radius:12px;padding:12px 14px;font-weight:700;font-size:13.5px;background:var(--hub);color:#fff;display:flex;gap:8px;justify-content:center;align-items:center;width:100%}
+.btn.acc{background:var(--hub-acc)} .btn.ai{background:var(--p-ai)}
+.btn.sec{background:#eef0f6;color:var(--hub)} .btn.out{background:#fff;color:var(--hub-acc);border:1.5px solid var(--hub-acc)}
+.btn:disabled{opacity:.42;cursor:not-allowed}
+.btn.sm{padding:8px 11px;font-size:12px;border-radius:9px;width:auto}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.empty{text-align:center;padding:22px 12px;display:grid;gap:8px;justify-items:center}
+.empty .big{width:54px;height:54px;border-radius:16px;background:var(--p-ai-soft);color:var(--p-ai);display:grid;place-items:center;font-size:24px}
+.claim{display:flex;gap:10px;align-items:center;padding:12px;border:1px solid var(--p-line);border-radius:14px;background:var(--p-card);width:100%;text-align:left;color:var(--p-ink)}
+.claim .tx{flex:1;min-width:0} .claim b{font-size:13px;display:block} .claim small{font:500 11px var(--f-mono);color:var(--p-muted)}
+
+/* Khai báo */
+textarea{width:100%;border:1.5px solid var(--p-line);border-radius:14px;padding:12px;font:inherit;font-size:13.5px;line-height:1.5;resize:none;background:#fff;color:var(--p-ink);min-height:160px}
+textarea:focus{border-color:var(--hub-acc);outline:none}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--p-line);background:#fff;color:var(--p-ink);border-radius:999px;padding:6px 10px;font-size:11.5px;font-weight:600}
+.chip.demo{border-style:dashed;color:var(--hub-acc);border-color:#c9cdf2}
+.hints{display:grid;gap:5px;font-size:11.5px;color:var(--p-muted)}
+.hints span::before{content:"";display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--p-ai);margin-right:7px;vertical-align:middle}
+.mic{display:flex;gap:8px;align-items:center;border:1.5px dashed #d4c2ee;background:var(--p-ai-soft);color:var(--p-ai);font-weight:700;font-size:12.5px;border-radius:12px;padding:9px 12px;width:100%;justify-content:center}
+
+/* AI */
+.aihd{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.aihd b{color:var(--p-ai);display:flex;gap:6px;align-items:center;font-size:13.5px}
+.aicard{border:1.5px solid #e1cdf7;background:linear-gradient(180deg,#fbf7ff,#fff 60%)}
+.anl{display:grid;gap:12px;padding:30px 18px}
+.anl .orb{width:64px;height:64px;border-radius:50%;margin:10px auto 6px;background:conic-gradient(from 0deg,var(--p-ai),#c7a4f3,var(--hub-acc),var(--p-ai));animation:spin 1.4s linear infinite;display:grid;place-items:center}
+.anl .orb::after{content:"";width:50px;height:50px;border-radius:50%;background:var(--p-bg);display:grid;place-items:center;color:var(--p-ai);font-size:20px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.anl-step{display:flex;gap:10px;align-items:center;font-size:13px;color:var(--p-muted);opacity:.45;transition:opacity .25s}
+.anl-step.on{opacity:1;color:var(--p-ink)}
+.anl-step .s{width:22px;height:22px;border-radius:50%;border:2px solid var(--p-line);display:grid;place-items:center;flex:none;font-size:11px}
+.anl-step.on .s{border-color:var(--p-ai);color:var(--p-ai)}
+.anl-step.dn .s{background:var(--p-ok);border-color:var(--p-ok);color:#fff}
+.lst{display:grid;gap:7px;margin:0;padding:0;list-style:none}
+.lst li{display:flex;gap:8px;font-size:12px;line-height:1.45}
+.lst li i{flex:none;width:17px;height:17px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:10px;font-weight:800;margin-top:1px}
+.lst li i.ok{background:var(--p-ok-soft);color:var(--p-ok)} .lst li i.no{background:#eef0f5;color:var(--p-muted)} .lst li i.wr{background:var(--p-warn-soft);color:var(--p-warn)} .lst li i.ai{background:var(--p-ai-soft);color:var(--p-ai)} .lst li i.bd{background:var(--p-bad-soft);color:var(--p-bad)}
+.gcn{border:1.5px solid var(--hub-acc);border-radius:13px;padding:11px;display:grid;gap:4px;background:#f6f6ff}
+.gcn .h{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.gcn b{font-size:13px} .gcn small{font:500 11px var(--f-mono);color:var(--p-muted)}
+.q{display:grid;gap:7px}
+.q .opt{border:1.5px solid var(--p-line);background:#fff;border-radius:11px;padding:10px 12px;text-align:left;font-size:12.5px;font-weight:600;color:var(--p-ink)}
+.q .opt.on{border-color:var(--p-ai);background:var(--p-ai-soft);color:var(--p-ai)}
+
+/* Hướng dẫn mốc */
+.okhd{display:flex;gap:11px;align-items:center}
+.okhd .c{width:40px;height:40px;border-radius:50%;background:var(--p-ok-soft);color:var(--p-ok);display:grid;place-items:center;flex:none}
+.code{font:600 12px var(--f-mono);color:var(--hub-acc)}
+.tl{display:grid;gap:0}
+.tl-i{display:grid;grid-template-columns:26px minmax(0,1fr);gap:10px;position:relative;padding-bottom:14px}
+.tl-i:not(:last-child)::before{content:"";position:absolute;left:12px;top:26px;bottom:2px;width:2px;background:var(--p-line)}
+.tl-i .m{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;z-index:1}
+.m.dn{background:var(--p-ok);color:#fff} .m.wt{background:#fff;border:2px solid var(--hub-acc);color:var(--hub-acc)} .m.wr{background:var(--p-warn);color:#fff} .m.nx{background:#fff;border:2px solid var(--p-line);color:var(--p-muted)}
+.tl-i b{font-size:13px;display:block}
+.tl-i p{margin:3px 0 0;font-size:11.8px;color:var(--p-muted);line-height:1.45}
+.dl{display:inline-flex;gap:5px;align-items:center;font:600 10.5px var(--f-mono);padding:2px 7px;border-radius:6px;background:#eef0f6;color:var(--p-muted);margin-top:5px}
+.dl.hot{background:var(--p-warn-soft);color:var(--p-warn)} .dl.ok{background:var(--p-ok-soft);color:var(--p-ok)}
+.linkbtn{border:0;background:none;color:var(--p-ai);font-weight:700;font-size:12px;padding:6px 0 0;display:inline-flex;gap:5px;align-items:center}
+.tips{display:grid;gap:6px;margin:0;padding-left:18px;font-size:12px;color:var(--p-ink)}
+.pend{display:inline-block;font:600 9.5px var(--f-mono);letter-spacing:.04em;padding:1px 5px;border-radius:4px;background:var(--p-warn-soft);color:var(--p-warn);vertical-align:1px;margin-left:4px;white-space:nowrap}
+
+/* Chứng từ */
+.lockbar{display:flex;gap:10px;align-items:center;width:100%;text-align:left;border:1.5px solid #f1c4bf;background:var(--p-bad-soft);color:var(--p-bad);border-radius:13px;padding:10px 12px}
+.lockbar b{display:block;font-size:13px} .lockbar small{display:block;font-size:11px;color:var(--p-ink);opacity:.8}
+.lockbar .ph{width:32px;height:32px;border-radius:50%;background:var(--p-bad);color:#fff;display:grid;place-items:center;flex:none}
+.sel{width:100%;border:1.5px solid var(--p-line);border-radius:12px;padding:10px 12px;font:inherit;font-size:13.5px;color:var(--p-ink);background:#fff}
+.drow{display:flex;gap:8px;align-items:center;padding:9px 0;border-top:1px solid var(--p-line)}
+.drow:first-of-type{border-top:0}
+.drow .t{flex:1;min-width:0;font-size:12px;line-height:1.4}
+.mini{border:1.5px dashed #c9cdf2;background:#f7f8ff;color:var(--hub-acc);border-radius:9px;padding:6px 9px;font-weight:700;font-size:11px;white-space:nowrap;display:inline-flex;gap:5px;align-items:center}
+.dn-t{color:var(--p-ok);font-weight:700;font-size:11px;white-space:nowrap}
+.pick{display:flex;gap:10px;align-items:center;width:100%;text-align:left;border:1.5px solid var(--p-line);background:#fff;border-radius:13px;padding:10px 12px;color:var(--p-ink)}
+.pick:hover{border-color:var(--hub-acc)}
+.pick .tx{flex:1;min-width:0} .pick b{display:block;font-size:13px} .pick small{display:block;font:500 10.5px var(--f-mono);color:var(--p-muted)} .pick em{display:block;font-style:normal;font-size:11.5px;color:var(--p-muted);margin-top:2px;line-height:1.35}
+.prog{height:6px;border-radius:4px;background:#e7e9f2;overflow:hidden}
+.prog i{display:block;height:100%;background:linear-gradient(90deg,var(--hub-acc),var(--p-ai));transition:width .35s}
+.doc{background:var(--p-card);border:1px solid var(--p-line);border-radius:14px;padding:12px;display:grid;gap:9px}
+.doc.dn{border-color:#bfe4d2}
+.doc .h{display:flex;gap:10px;align-items:flex-start}
+.doc .h .ix{width:24px;height:24px;border-radius:7px;background:#eef0f6;color:var(--p-muted);display:grid;place-items:center;font:600 11px var(--f-mono);flex:none}
+.doc.dn .h .ix{background:var(--p-ok);color:#fff}
+.doc .h .tx{flex:1;min-width:0} .doc .h b{font-size:12.8px;display:block;line-height:1.35} .doc .h small{font-size:11.2px;color:var(--p-muted);line-height:1.35;display:block;margin-top:2px}
+.shot{display:flex;gap:10px;align-items:stretch}
+.thumb{width:54px;flex:none;border-radius:8px;background:repeating-linear-gradient(0deg,#e9ecf3 0 6px,#f6f7fb 6px 11px);border:1px solid var(--p-line);position:relative}
+.thumb::after{content:"";position:absolute;left:8px;right:14px;top:8px;height:5px;border-radius:3px;background:#c9cfdd}
+.ocr{flex:1;min-width:0;display:grid;gap:3px;font-size:11.5px}
+.ocr .r{display:flex;justify-content:space-between;gap:8px} .ocr .r span{color:var(--p-muted)} .ocr .r b{text-align:right;font-size:11.5px}
+.reading{display:flex;gap:8px;align-items:center;color:var(--p-ai);font-size:12px;font-weight:600}
+.spin{width:16px;height:16px;border-radius:50%;border:2px solid #e1cdf7;border-top-color:var(--p-ai);animation:spin .8s linear infinite}
+.camb{border:1.5px dashed #c9cdf2;background:#f7f8ff;color:var(--hub-acc);border-radius:10px;padding:9px;font-weight:700;font-size:12px;display:flex;gap:7px;justify-content:center;align-items:center;width:100%}
+
+/* Phương án */
+.amt{font-size:30px;font-weight:800;letter-spacing:-.02em;color:var(--p-ok);font-variant-numeric:tabular-nums}
+.calc td{font-variant-numeric:tabular-nums}
+.calc tr.tot td{border-bottom:0;font-size:13px;padding-top:9px} .calc tr.tot td:last-child{color:var(--p-ok)}
+.chk{display:flex;gap:9px;align-items:flex-start;font-size:12px;line-height:1.45}
+.chk input{margin-top:2px;width:16px;height:16px;accent-color:var(--hub-acc)}
+.acct{display:flex;gap:10px;align-items:center;padding:10px;border-radius:12px;background:#f6f7fb}
+.acct .ico{width:34px;height:34px;border-radius:10px;background:linear-gradient(120deg,var(--bank1),var(--bank2));display:grid;place-items:center;color:#fff;flex:none}
+.route{display:flex;gap:10px;align-items:center;padding:12px;border-radius:13px}
+.route.g{background:var(--p-ok-soft);color:var(--p-ok)} .route.y{background:var(--p-warn-soft);color:var(--p-warn)}
+.route .lt{width:14px;height:14px;border-radius:50%;flex:none;background:currentColor;box-shadow:0 0 0 4px color-mix(in srgb,currentColor 20%,transparent)}
+.route b{font-size:13.5px;display:block} .route small{font-size:11.5px;opacity:.9}
+.paid{display:grid;justify-items:center;text-align:center;gap:6px;padding:12px 0 4px}
+.paid .c{width:66px;height:66px;border-radius:50%;background:var(--p-ok);color:#fff;display:grid;place-items:center;box-shadow:0 0 0 10px var(--p-ok-soft)}
+.mtl{display:grid;gap:8px;font-size:12px}
+.mtl div{display:grid;grid-template-columns:86px minmax(0,1fr);gap:8px}
+.mtl span{font:500 10.5px var(--f-mono);color:var(--p-muted);padding-top:1px}
+
+/* Sheet & toast trong điện thoại */
+.sheetBg{position:absolute;inset:0;background:rgba(10,14,30,.45);display:flex;align-items:flex-end;z-index:20;animation:fade .2s}
+@keyframes fade{from{opacity:0}}
+.sheet{background:var(--p-card);width:100%;border-radius:22px 22px 0 0;padding:16px 16px 24px;display:grid;gap:12px;max-height:82%;overflow-y:auto;animation:up .25s ease-out}
+@keyframes up{from{transform:translateY(30px)}}
+.sheet .grab{width:40px;height:4px;border-radius:3px;background:var(--p-line);margin:0 auto}
+.draft{font-size:12px;line-height:1.6;background:#fafbfd;border:1px solid var(--p-line);border-radius:12px;padding:12px;white-space:pre-wrap}
+.otpIn{display:flex;gap:8px;justify-content:center}
+.otpIn input{width:100%;max-width:220px;text-align:center;font:600 22px var(--f-mono);letter-spacing:.35em;border:1.5px solid var(--p-line);border-radius:12px;padding:10px;color:var(--p-ink);background:#fff}
+.ptoast{position:absolute;left:16px;right:16px;bottom:92px;background:#1b2236;color:#fff;font-size:12px;padding:10px 12px;border-radius:12px;z-index:30;pointer-events:none;animation:fade .2s}
+.inp{width:100%;border:1.5px solid var(--p-line);border-radius:12px;padding:11px 12px;font:inherit;font-size:13.5px;color:var(--p-ink);background:#fff}
+.lab{font-size:11.5px;font-weight:700;color:var(--p-muted)}
+.seg2{display:grid;grid-template-columns:1fr 1fr;background:#eceef5;border-radius:10px;padding:3px}
+.seg2 button{border:0;background:none;padding:8px;border-radius:8px;font-weight:700;font-size:12px;color:var(--p-muted)}
+.seg2 button.on{background:#fff;color:var(--hub-acc);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="screen" id="screen"></div>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const vnd=n=>n.toLocaleString("vi-VN")+"đ";
+
+const I={
+ back:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+ home:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>',
+ shield:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5" stroke-linecap="round"/></svg>',
+ pulse:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-5 4 10 2-5h6"/></svg>',
+ heart:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>',
+ lockb:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/><circle cx="12" cy="15.5" r="1.4" fill="currentColor"/></svg>',
+ phone:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10 6l3 4-2 3 3 4" stroke-linecap="round"/></svg>',
+ chev:'<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>',
+ lock:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+ mic:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
+ cam:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+ check:'<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+ checkS:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+ bank:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M3 9l9-5 9 5M5 10v8M10 10v8M14 10v8M19 10v8M3 20h18"/></svg>',
+ doc:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h6"/></svg>',
+ sig:'<svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="4.5" y="5.5" width="3" height="6.5" rx="1"/><rect x="9" y="3" width="3" height="9" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1"/></svg>',
+ bat:'<svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x=".5" y=".5" width="21" height="11" rx="3" stroke="currentColor" opacity=".5"/><rect x="2" y="2" width="16" height="8" rx="1.6" fill="currentColor"/><rect x="22.5" y="4" width="2" height="4" rx="1" fill="currentColor" opacity=".5"/></svg>'
+};
+
+/* ===== Dữ liệu demo ===== */
+const CUST={name:"ĐẬU NGỌC LINH",phone:"0912 xxx 306",cccd:"0381•••••234",acct:"•••• 8306",acctFull:"1023 4567 8306"};
+const INSURER="Công ty bảo hiểm ABC", BANK="Sacombank", CODE="BT-2610-000318", BANK_HOT="1800 xxxx";
+const DEMO_ACCT={bank:"Vietcombank",no:"0071000452318"};
+const mask=n=>"•••• "+String(n).replace(/\D/g,"").slice(-4);
+const EXCL=[["LT-01","Tự chuyển tiền cho người quen, người thân"],["LT-02","Tự cung cấp, làm lộ mã OTP hoặc mật khẩu"]];
+const CFG=[["Mức khấu trừ","0đ"],["Thời gian chờ","Không áp dụng"],["Điều khoản loại trừ","LT-01, LT-02"]];
+const GCNS=[
+ {no:"EI2026-40693306",prod:"Bảo hiểm An toàn giao dịch",pkg:"Cơ bản",from:"20/04/2026",to:"19/04/2027",st:"ok",max:"20 triệu/vụ · 100 triệu/năm",fee:"5.000 VND/tháng",color:"#5b4cf5",icon:"shield",prog:"CT-DGB-01",kind:"cyber",desc:"Lừa đảo chuyển tiền, chiếm đoạt tài khoản, gian lận thẻ",
+  ben:[["Lừa đảo chuyển tiền, chiếm đoạt tài khoản","20.000.000đ/vụ"],["Gian lận thẻ: thẻ bị mất, bị sao chép","20.000.000đ/vụ"],["Hạn mức năm, cộng mọi quyền lợi","100.000.000đ/năm"]],
+  hist:"Năm hợp đồng 20/04/2026 đến 19/04/2027: đã bồi thường 1 vụ, 12.000.000đ. Hạn mức năm còn 88.000.000đ.",
+  note:"Hợp đồng 1 năm, phí đóng hằng tháng. Hạn mức năm tính theo năm hợp đồng của GCN, không theo năm tài chính."},
+ {no:"PH2026-00881245",prod:"Bảo hiểm Rơi vỡ màn hình điện thoại",pkg:"Tiêu chuẩn",from:"15/03/2026",to:"14/03/2027",st:"ok",max:"5.000.000 VND/vụ",fee:"149.000 VND",color:"#0f8f8a",icon:"phone",kind:"phone",noCfg:true,desc:"Sửa chữa, thay màn hình khi điện thoại bị rơi vỡ",
+  ben:[["Sửa chữa, thay màn hình do rơi vỡ","5.000.000đ/vụ"],["Thiết bị được bảo hiểm","iPhone 15 · IMEI ••• 4471"]]},
+ {no:"TN2026-10022817",prod:"Bảo hiểm Tai nạn cá nhân 24/7",pkg:"Nâng cao",from:"05/06/2026",to:"04/06/2027",st:"ok",max:"100.000.000 VND",fee:"120.000 VND",color:"#f07a2a",icon:"pulse",kind:"acc",noCfg:true,desc:"Chi phí y tế, thương tật do tai nạn",
+  ben:[["Tử vong, thương tật vĩnh viễn do tai nạn","100.000.000đ"],["Chi phí y tế do tai nạn","10.000.000đ"]]}
+];
+
+const SC={
+ s1:{key:"s1",short:"Bấm link lạ, mất 50 triệu",color:"var(--ok)",route:"auto",lock:true,
+  text:"Chiều nay khoảng 15h20 tôi nhận tin nhắn báo tài khoản Sacombank bị tạm khóa, kèm đường link để xác minh. Tôi bấm vào thì link tự tải về một ứng dụng và điện thoại bị điều khiển từ xa. Đến 15h35 tôi thấy tài khoản bị trừ 2 giao dịch 30.000.000đ và 20.000.000đ, tổng 50 triệu, chuyển đến một tài khoản lạ tên NGUYEN VAN T. Tôi không cung cấp mã OTP cho ai.",
+  conf:94,type:"Lừa đảo chuyển tiền điện tử qua đường link lạ",benefit:"Lừa đảo chuyển tiền, chiếm đoạt tài khoản",occ:"15:20, 20/10/2026",found:"15:35, 20/10/2026",amount:50000000,amountTxt:"50.000.000đ (2 giao dịch)",channel:"SMS giả danh ngân hàng, ứng dụng điều khiển từ xa",otp:"Ứng dụng lạ điều khiển điện thoại",
+  gcns:[{no:"EI2026-40693306",why:[["ok","Hiệu lực từ 20/04/2026 đến 19/04/2027, sự kiện lúc 15:20 ngày 20/10/2026 nằm trong thời hạn"],["ok","Quyền lợi Lừa đảo chuyển tiền, chiếm đoạt tài khoản: 20.000.000đ/vụ"],["ai","Năm hợp đồng đã bồi thường 1 vụ, 12.000.000đ. Hạn mức năm còn 88.000.000đ"]]}],
+  aiNote:"GCN có hiệu lực từ 20/04/2026, 6 tháng trước sự kiện: không có dấu hiệu mua bảo hiểm sau khi sự việc xảy ra. Phí kỳ tháng 10 đã thanh toán.",
+  excl:[["LT-01","Không: tiền chuyển đến tài khoản lạ, không phải người quen"],["LT-02","Không: bạn cho biết không cung cấp OTP, giao dịch do ứng dụng điều khiển từ xa thực hiện"]],
+  notApply:[],
+  police:"15:35 ngày 21/10/2026",policeLeft:"Còn 23 giờ 43 phút"},
+ s2:{key:"s2",short:"Mất ví, thẻ bị quẹt",color:"var(--warn)",route:"cs",lock:true,
+  text:"Chiều 18/10 tôi đánh rơi ví ở chợ, trong ví có thẻ ghi nợ Sacombank. Sáng nay khoảng 8h30 xem lịch sử giao dịch tôi mới thấy thẻ bị quẹt 3 lần, tổng 4.200.000đ, ngay trong chiều 18/10.",
+  conf:88,type:"Thẻ bị mất và bị sử dụng trái phép",benefit:"Gian lận thẻ",occ:"Chiều 18/10/2026",found:"08:30, 20/10/2026",amount:4200000,amountTxt:"4.200.000đ (3 giao dịch thẻ)",channel:"Thẻ vật lý bị mất",
+  gcns:[{no:"EI2026-40693306",why:[["ok","Sự kiện ngày 18/10/2026 nằm trong thời hạn 20/04/2026 đến 19/04/2027"],["ok","Quyền lợi Gian lận thẻ: 20.000.000đ/vụ"],["ai","Năm hợp đồng đã bồi thường 1 vụ, 12.000.000đ. Hạn mức năm còn 88.000.000đ"]]}],
+  excl:[["LT-01","Không: thẻ bị người lạ sử dụng"],["LT-02","Không: giao dịch quẹt thẻ, không dùng OTP"]],
+  notApply:[],
+  police:"08:30 ngày 21/10/2026",policeLeft:"Còn 16 giờ 38 phút"},
+ s3:{key:"s3",short:"Tự chuyển tiền cho người quen vay",color:"var(--bad)",route:"out",
+  text:"Tháng trước tôi chuyển khoản cho một người bạn mượn 3.000.000đ. Đến hẹn bạn không trả, giờ còn chặn liên lạc với tôi.",
+  conf:90,type:"Chuyển khoản cho người quen, không được hoàn trả",benefit:"Lừa đảo chuyển tiền, chiếm đoạt tài khoản",gcns:[{no:"EI2026-40693306",why:[["ok","Hiệu lực từ 20/04/2026 đến 19/04/2027, sự kiện nằm trong thời hạn"],["ok","Quyền lợi Lừa đảo chuyển tiền, chiếm đoạt tài khoản: 20.000.000đ/vụ"],["ai","Năm hợp đồng đã bồi thường 1 vụ, 12.000.000đ. Hạn mức năm còn 88.000.000đ"]]}],notApply:[],occ:"Tháng 09/2026",found:"Chưa rõ",amount:3000000,amountTxt:"3.000.000đ (1 giao dịch)",channel:"Bạn tự chuyển khoản",
+  outTitle:"Có thể thuộc điều khoản loại trừ LT-01",hit:["LT-01","Tự chuyển tiền cho người quen, người thân","“chuyển khoản cho một người bạn mượn 3.000.000đ”"]},
+ s4:{key:"s4",short:"Đọc OTP cho người giả danh ngân hàng",color:"var(--bad)",route:"out",lock:true,
+  text:"Sáng nay khoảng 9h có người gọi tự xưng nhân viên Sacombank, nói cần xác minh để nâng hạn mức thẻ. Tôi đã đọc mã OTP gửi về điện thoại cho họ. Vài phút sau tài khoản bị trừ 8.000.000đ.",
+  conf:92,gcns:[{no:"EI2026-40693306",why:[["ok","Hiệu lực từ 20/04/2026 đến 19/04/2027, sự kiện nằm trong thời hạn"],["ok","Quyền lợi Lừa đảo chuyển tiền, chiếm đoạt tài khoản: 20.000.000đ/vụ"],["ai","Năm hợp đồng đã bồi thường 1 vụ, 12.000.000đ. Hạn mức năm còn 88.000.000đ"]]}],notApply:[],type:"Lừa đảo qua cuộc gọi giả danh ngân hàng",benefit:"Lừa đảo chuyển tiền, chiếm đoạt tài khoản",occ:"09:05, 20/10/2026",found:"09:12, 20/10/2026",amount:8000000,amountTxt:"8.000.000đ (1 giao dịch)",channel:"Cuộc gọi giả danh nhân viên ngân hàng",otp:"Mã OTP được đọc cho người gọi",
+  outTitle:"Có thể thuộc điều khoản loại trừ LT-02",hit:["LT-02","Tự cung cấp, làm lộ mã OTP hoặc mật khẩu","“Tôi đã đọc mã OTP gửi về điện thoại cho họ”"],
+  related:"Sự việc đúng loại quyền lợi của GCN EI2026-40693306, nhưng rơi vào điều khoản loại trừ của chương trình."},
+ unk:{key:"unk",short:"Chưa xác định được sự kiện",color:"var(--muted)",route:"out",text:"Tối qua điện thoại tôi hiện nhiều thông báo lạ, sáng nay vào app thấy số dư hơi khác so với tôi nhớ. Tôi không chắc chuyện gì đã xảy ra.",
+  conf:48,type:"Chưa xác định",benefit:null,occ:"Chưa rõ",found:"Chưa rõ",amount:0,amountTxt:"Chưa rõ",channel:"Chưa rõ",
+  outTitle:"Chưa đủ thông tin để kết luận"}
+};
+SC.s5=Object.assign({},SC.s1,{key:"s5",short:"Lỗi gửi, không ghi nhận được",color:"var(--bad)",route:"err",lock:false});
+SC.s6=Object.assign({},SC.s1,{key:"s6",short:"Gửi được, lỗi phân tích tự động",color:"var(--warn)",route:"manual",lock:false});
+const DEMO_KEYS=["s1","s2","s3","s4","unk","s5","s6"];
+const CLAIM_HOT="1900 xxxx";
+const KG={
+ cyber:{name:"An ninh mạng",items:()=>[
+   {m:"wr",t:`Nếu bị trừ tiền: gọi ${BANK} khóa tài khoản, thẻ`,dl:'<span class="dl hot">Làm ngay · mốc 30 phút kể từ khi phát hiện</span>',p:"Ngân hàng xử lý khóa tài khoản, thẻ để chặn thiệt hại.",act:callBtn("Gọi",BANK_HOT,"acc")},
+   {m:"wt",t:"Trình báo Công an",dl:'<span class="dl">Trong 24 giờ kể từ khi phát hiện</span>',p:"Chỉ cần giấy xác nhận đã tiếp nhận trình báo có dấu của Công an."},
+   {m:"nx",t:"Giữ lại bằng chứng",dl:'<span class="dl">Ngay bây giờ</span>',p:"Không xóa tin nhắn, lịch sử cuộc gọi. Chụp lại ứng dụng lạ, trang web giả, lịch sử giao dịch."}],
+  docs:["Giấy yêu cầu bồi thường bảo hiểm","CCCD (2 mặt)","Giấy xác nhận tiếp nhận trình báo của Công an","Thư phản hồi của ngân hàng (từ chối bồi thường toàn bộ hoặc một phần)","Sao kê hoặc ảnh chụp giao dịch bị trừ tiền","Bằng chứng liên quan: tin nhắn, đường link, ảnh chụp ứng dụng lạ, lịch sử cuộc gọi"]},
+ phone:{name:"Rơi vỡ màn hình điện thoại",items:()=>[
+   {m:"wt",t:"Ngừng dùng máy nếu màn hình vỡ nặng",dl:'<span class="dl">Ngay bây giờ</span>',p:'Không tự sửa hoặc thay màn hình ở nơi không được chỉ định, để giữ quyền lợi bảo hiểm.<span class="pend">CHỜ CHỐT</span>'},
+   {m:"nx",t:"Chụp ảnh máy và số IMEI",dl:'<span class="dl">Trước khi mang đi sửa</span>',p:"Chụp mặt trước, mặt sau máy và màn hình hiển thị số IMEI (bấm *#06#)."},
+   {m:"nx",t:"Mang máy tới trung tâm sửa chữa được chỉ định",dl:'<span class="dl">Theo hướng dẫn của cán bộ</span>',p:'Trung tâm kiểm tra và báo chi phí sửa chữa cho Công ty bảo hiểm.<span class="pend">CHỜ CHỐT</span>'}],
+  docs:["Giấy yêu cầu bồi thường bảo hiểm","CCCD (2 mặt)","Ảnh chụp máy bị vỡ: mặt trước, mặt sau","Ảnh chụp màn hình hiển thị số IMEI","Báo giá hoặc hóa đơn sửa chữa của trung tâm được chỉ định"]},
+ acc:{name:"Tai nạn cá nhân",items:()=>[
+   {m:"wt",t:"Đi khám, điều trị tại cơ sở y tế",dl:'<span class="dl">Ngay khi có thể</span>',p:"Ưu tiên sức khỏe. Giữ lại toàn bộ giấy tờ khám, điều trị."},
+   {m:"nx",t:"Giữ hóa đơn, chứng từ y tế",dl:'<span class="dl">Trong suốt quá trình điều trị</span>',p:"Hóa đơn viện phí, đơn thuốc, kết quả xét nghiệm, phim chụp."},
+   {m:"nx",t:"Xin xác nhận tai nạn nếu có",dl:'<span class="dl">Tai nạn giao thông, lao động</span>',p:'Biên bản hoặc xác nhận của cơ quan có thẩm quyền.<span class="pend">CHỜ CHỐT</span>'}],
+  docs:["Giấy yêu cầu bồi thường bảo hiểm","CCCD (2 mặt)","Giấy ra viện, giấy chứng nhận phẫu thuật hoặc sổ khám bệnh","Hóa đơn viện phí, đơn thuốc","Kết quả xét nghiệm, phim chụp (nếu có)","Biên bản hoặc xác nhận tai nạn (nếu có)"]},
+ none:{name:"",items:()=>[{m:"nx",t:"Giữ lại bằng chứng",dl:'<span class="dl">Ngay bây giờ</span>',p:"Giữ lại ảnh chụp, tin nhắn, giấy tờ liên quan đến sự việc."}],
+  docs:["CCCD (2 mặt)","Ảnh chụp, giấy tờ liên quan đến sự việc"],note:"Cán bộ sẽ hướng dẫn chứng từ phù hợp khi liên hệ."}
+};
+const GENDOCS=["Giấy yêu cầu bồi thường bảo hiểm","CCCD (2 mặt)","Giấy xác nhận tiếp nhận trình báo của Công an","Thư phản hồi của ngân hàng (từ chối bồi thường toàn bộ hoặc một phần)","Sao kê hoặc ảnh chụp giao dịch bị trừ tiền","Bằng chứng liên quan: tin nhắn, đường link, ảnh chụp ứng dụng lạ, lịch sử cuộc gọi"];
+
+const DOCS={
+ s1:[
+  {id:"d1",auto:true,t:"Giấy yêu cầu bồi thường bảo hiểm",d:"iBaohiem tự lập từ nội dung bạn khai báo, bạn chỉ cần xác nhận."},
+  {id:"d2",t:"CCCD (2 mặt)",d:"Chụp rõ 4 góc, không lóa.",ocr:[["Họ tên","ĐẬU NGỌC LINH"],["Số CCCD","0381•••••234"]],chk:[["ok","Họ tên khớp người được bảo hiểm trên GCN"]]},
+  {id:"d3",t:"Giấy xác nhận tiếp nhận trình báo của Công an",d:"Chỉ cần giấy xác nhận đã tiếp nhận, không cần chờ kết luận điều tra.",ocr:[["Cơ quan","Công an phường Đống Đa"],["Tiếp nhận lúc","19:10, 20/10/2026"]],chk:[["ok","Trình báo trong 24 giờ kể từ khi phát hiện (sau 3 giờ 35 phút)"],["ok","Có dấu và chữ ký của cơ quan tiếp nhận"]]},
+  {id:"d4",t:"Thư phản hồi của ngân hàng",d:"Ngân hàng từ chối bồi thường toàn bộ hoặc một phần tổn thất.<span class=\"pend\">CHỜ CHỐT hình thức</span>",ocr:[["Ngày thư","22/10/2026"],["Ngân hàng từ chối","50.000.000đ"]],chk:[["ok","Ngân hàng từ chối toàn bộ, chưa hoàn lại khoản nào"]]},
+  {id:"d5",t:"Sao kê hoặc ảnh chụp giao dịch bị trừ tiền",d:"Có thời gian, số tiền, tài khoản nhận.",ocr:[["Giao dịch đọc được","3 dòng"],["Tài khoản nhận","NGUYEN VAN T ••• 7781"]],chk:[["ok","2 giao dịch lúc 15:36 (30.000.000đ) và 15:38 (20.000.000đ) khớp khai báo, tổng 50.000.000đ"],["ai","Giao dịch 14:02 thanh toán tiền điện 200.000đ xảy ra trước sự kiện, không tính vào tổn thất"]]},
+  {id:"d6",t:"Bằng chứng liên quan",d:"Tin nhắn chứa đường link giả, ảnh chụp ứng dụng lạ đã cài.",ocr:[["Người gửi","SacomBnk"],["Đường link","xacminh-taikhoan.top"]],chk:[["ok","Tin nhắn nhận lúc 15:18, trước giao dịch đầu tiên"],["ai","Ứng dụng cài ngoài kho chính thức, có quyền điều khiển màn hình: phù hợp với khai báo không tự cung cấp OTP"]]}
+ ],
+ s2:[
+  {id:"d1",auto:true,t:"Giấy yêu cầu bồi thường bảo hiểm",d:"iBaohiem tự lập từ nội dung bạn khai báo, bạn chỉ cần xác nhận."},
+  {id:"d2",t:"CCCD (2 mặt)",d:"Chụp rõ 4 góc, không lóa.",ocr:[["Họ tên","ĐẬU NGỌC LINH"],["Số CCCD","0381•••••234"]],chk:[["ok","Họ tên khớp người được bảo hiểm"]]},
+  {id:"d3",t:"Giấy xác nhận tiếp nhận trình báo của Công an",d:"Trình báo việc mất thẻ và bị sử dụng trái phép.",ocr:[["Cơ quan","Công an phường Ô Chợ Dừa"],["Tiếp nhận lúc","10:15, 20/10/2026"]],chk:[["ok","Trình báo trong 24 giờ kể từ khi phát hiện (sau 1 giờ 45 phút)"]]},
+  {id:"d4",t:"Xác nhận khóa thẻ của ngân hàng",d:"Tin nhắn hoặc xác nhận của tổng đài về thời điểm khóa thẻ.",ocr:[["Khóa thẻ lúc","08:41, 20/10/2026"],["Số thẻ","•••• 5521"]],chk:[["ok","Khóa thẻ 11 phút sau khi phát hiện, trong mốc 30 phút"]]},
+  {id:"d5",t:"Thư phản hồi của ngân hàng",d:"Thư ngân hàng từ chối bồi thường toàn bộ hoặc một phần tổn thất.",ocr:[["Ngân hàng đã hoàn","1.200.000đ"],["Ngân hàng từ chối","3.000.000đ"]],chk:[["ai","Ngân hàng đã hoàn 1.200.000đ. Phần đề nghị bồi thường còn lại: 3.000.000đ"]]},
+  {id:"d6",t:"Sao kê giao dịch thẻ",d:"Có thời gian, số tiền, nơi giao dịch.",ocr:[["Giao dịch đọc được","3 dòng"],["Thời gian","16:05 đến 16:40, 18/10"]],chk:[["ok","3 giao dịch khớp khai báo, tổng 4.200.000đ"],["wr","Thẻ bị dùng ngay sau khi mất nhưng 2 ngày sau mới phát hiện: chuyên viên cần xem xét nghĩa vụ bảo quản thẻ"]]}
+ ]
+};
+
+/* Tính bồi thường: từng GCN chi = min(thiệt hại còn lại, hạn mức/vụ, hạn mức năm còn lại) - khấu trừ; tổng không vượt thiệt hại thực tế */
+const CALC={loss:50000000,refund:0,parts:[
+ {no:"EI2026-40693306",name:"An toàn giao dịch",vu:20000000,yearCap:100000000,usedN:1,usedAmt:12000000,ded:0}]};
+function calcRun(){let need=CALC.loss-CALC.refund;return CALC.parts.map(p=>{const yearLeft=p.yearCap-p.usedAmt;const before=need;const pay=Math.max(0,Math.min(need,p.vu,yearLeft)-p.ded);need-=pay;return Object.assign({},p,{yearLeft,before,pay})})}
+const RES=calcRun(); const TOTAL=RES.reduce((a,p)=>a+p.pay,0);
+
+/* ===== Trạng thái ===== */
+const PAST={code:"BT-2608-000207",scen:"past",type:"Lừa đảo chuyển tiền",status:"Đã chi trả",note:"Đã chi 12.000.000đ ngày 05/08/2026 · GCN EI2026-40693306"};
+const S0=()=>({scen:"s1",screen:"hub",tab:"hd",open:null,narr:"",ans:null,docs:{},claims:[Object.assign({},PAST)],sheet:null,agree:false,toast:"",rvDone:false,acct:{bank:"Vietcombank",no:"",checked:false},safe:false,gd:{},pick:null,commit:false});
+let st=S0(), timers=[];
+const clearT=()=>{timers.forEach(clearTimeout);timers=[]};
+const later=(fn,ms)=>timers.push(setTimeout(fn,ms));
+const sc=()=>SC[st.scen];
+const isOut=()=>sc().route==="out";
+const gcnBy=no=>GCNS.find(g=>g.no===no);
+
+const STAGES=[
+ ["Ví bảo hiểm",[]],
+ ["Tra cứu hợp đồng",["hub"]],
+ ["Kể lại sự việc",["declare"]],
+ ["AI xếp loại sự kiện",["analyzing","aiResult","sending"]],
+ ["Hướng dẫn và mốc thời gian",["guide","sendErr","received","unclear","exclRecv"]],
+ ["Chứng từ",["docs","review"]],
+ ["Phương án và xác nhận",["calc"]],
+ ["Chi trả hoặc chuyển chuyên viên",["paid","cs"]]
+];
+function stageOf(){const i=STAGES.findIndex(s=>s[1].includes(st.screen));return i<0?0:i}
+
+/* ===== Điều hướng ===== */
+window.go=(scr,extra)=>{clearT();st.sheet=null;st.toast="";if(scr==="sending"||scr==="analyzing"||scr==="declare")st.pick=null;Object.assign(st,extra||{});st.screen=scr;if(scr==="review")st.rvDone=false;render();const b=document.querySelector("#screen .body");if(b)b.scrollTop=0;
+  if(scr==="analyzing")runAnalyze(); if(scr==="sending")runSending(); if(scr==="review")runReview();};
+window.resetDemo=()=>{clearT();const s=st.scen;st=S0();st.scen=s;st.screen="hub";render()};
+window.pickScen=k=>{st.scen=k;const cur=stageOf();if(cur>=2){jump(cur)}else render()};
+window.jump=n=>{
+  const s=sc();st.pick=null;
+  if(n<=0)return closeHub();
+  if(n===1)return go("hub",{tab:"hd"});
+  if(n===2)return go("declare",{narr:s.text,tab:"bt"});
+  st.narr=s.text;
+  if(s.route==="err")return go("sendErr");
+  if(st.scen==="unk"){ensureClaim("Chờ cán bộ liên hệ");return go("unclear")}
+  if(s.hit&&n>3){ensureClaim("Chờ cán bộ liên hệ");return go("exclRecv")}
+  if(s.route==="manual"){ensureClaim("Chờ cán bộ liên hệ");return go("unclear")}
+  if(n===3)return go("aiResult",{ans:st.scen==="s2"?(st.ans||"yes"):null});
+  if(isOut()){ensureClaim("Chờ chuyên viên tư vấn");return go("cs")}
+  if(st.scen==="s2"&&!st.ans)st.ans="yes";
+  ensureClaim("Chờ bổ sung chứng từ");
+  if(n===4)return go("guide");
+  fillDocs();
+  if(n===5)return go("docs");
+  if(st.scen==="s2"){setClaim("Chuyên viên đang xử lý");return go("cs")}
+  if(n===6){setClaim("Chờ bạn xác nhận");return go("calc",{agree:false})}
+  setClaim("Đã chi trả");if(!st.acct.checked)st.acct={bank:DEMO_ACCT.bank,no:DEMO_ACCT.no,checked:true};return go("paid");
+};
+function fillDocs(){(DOCS[st.scen]||[]).forEach(d=>st.docs[d.id]="dn")}
+const codeFor=()=>st.scen==="s1"?CODE:st.scen==="s2"?"BT-2610-000319":st.scen==="s6"?"BT-2610-000321":st.scen==="unk"?"BT-2610-000322":st.scen==="s3"?"BT-2610-000323":st.scen==="s4"?"BT-2610-000324":"TV-2610-000320";
+function ensureClaim(status){if(!st.claims.find(c=>c.code===codeFor()))st.claims.unshift({code:codeFor(),scen:st.scen,status})}
+function setClaim(status){ensureClaim(status);st.claims.forEach(c=>{if(c.code===codeFor())c.status=status})}
+
+window.back=()=>{if(st.screen==="hub")return closeHub();const m={sending:null,exclRecv:"aiResult",unclear:"hub",sendErr:"declare",received:"hub",declare:"hub",aiResult:"declare",guide:"hub",docs:"guide",review:"docs",calc:"docs",paid:"hub",cs:"hub"};const t=m[st.screen];if(t)go(t,t==="hub"?{tab:st.screen==="declare"?"bt":st.tab}:{})};
+window.ptoast=msg=>{st.toast=msg;render();later(()=>{st.toast="";render()},2000)};
+
+/* ===== Khung màn hình ===== */
+/* Thanh trạng thái và thanh home do app Sacombank Pay hiển thị */
+function sbar(){return ""}
+function hubHead(title,sub){return `<div class="hb-head"><button class="ic" aria-label="Quay lại" onclick="back()">${I.back}</button>
+ <div class="hb-brand"><span class="hb-logo">iB</span><div><b>${title||"iBaohiem"}</b><small>${sub||"Tra cứu và Bồi thường"}</small></div></div>
+ <button class="ic" aria-label="Về app Sacombank Pay" onclick="closeHub()">${I.home}</button></div>`}
+function verStrip(){return `<div class="hb-ver">${I.lock} Đã xác thực qua ${BANK} · ${CUST.name}</div>`}
+const homeBar="";
+const PHONE_I='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1A17 17 0 0 1 4 5a1 1 0 0 1 1-1z"/></svg>';
+const lockBar=()=>`<button class="lockbar" onclick="ptoast('Demo: gọi hotline ${BANK} ${BANK_HOT} để khóa tài khoản, thẻ')"><span class="ph">${PHONE_I}</span><span><b>Khóa tài khoản ngay</b><small>Gọi hotline ${BANK} ${BANK_HOT}. Ngân hàng xử lý khóa tài khoản, thẻ.</small></span></button>`;
+const scamNote=()=>`<div class="note warn"><b>${INSURER} không bao giờ yêu cầu bạn cung cấp OTP, mật khẩu hay chuyển tiền để nhận bồi thường.</b> Chuyên viên chỉ gọi từ số 1900 xxxx, thông tin cuộc gọi hiện trong mục Bồi thường trước khi gọi.</div>`;
+const ico=(g,sz)=>`<span class="ico" style="background:${g.color}${sz?`;width:${sz}px;height:${sz}px;border-radius:10px`:""}">${I[g.icon]}</span>`;
+
+/* ---- 2. Hub: 2 tab ---- */
+function scrHub(){
+ const tabs=`<div class="tabs"><button class="${st.tab==="hd"?"on":""}" onclick="go('hub',{tab:'hd'})">Quản lý hợp đồng <span class="cnt">${GCNS.length}</span></button><button class="${st.tab==="bt"?"on":""}" onclick="go('hub',{tab:'bt'})">Bồi thường ${st.claims.length?`<span class="cnt">${st.claims.length}</span>`:""}</button></div>`;
+ let inner="";
+ if(st.tab==="hd"){
+  inner=GCNS.map(g=>{const o=st.open===g.no;return `<div class="ct ${o?"open":""}">
+   <button class="ct-row" onclick="toggleCt('${g.no}')"><span class="pol">${ico(g,34)}</span><span class="tx"><b>${g.prod}</b><small>${g.no}</small></span><span class="pill ${g.st}">${g.st==="ok"?"Hiệu lực":"Hết hạn"}</span>${I.chev}</button>
+   ${o?`<div class="ct-det">
+    <div class="kv"><div><div class="k">Người được BH</div><div class="v">${CUST.name}</div></div><div><div class="k">Gói</div><div class="v">${g.pkg}</div></div>
+    <div><div class="k">Hiệu lực từ</div><div class="v">${g.from}</div></div><div><div class="k">Đến</div><div class="v">${g.to}</div></div>
+    <div><div class="k">Quyền lợi tối đa</div><div class="v">${g.max}</div></div><div><div class="k">Phí đã thanh toán</div><div class="v">${g.fee}</div></div>
+    <div class="full"><div class="k">Công ty bảo hiểm</div><div class="v">${INSURER} · phát hành qua iBaohiem</div></div></div>
+    <table class="bt">${g.ben.map(b=>`<tr><td>${b[0]}</td><td>${b[1]}</td></tr>`).join("")}</table>
+    ${g.noCfg?"":`<table class="bt">${CFG.map(b=>`<tr><td>${b[0]}</td><td>${b[1]}</td></tr>`).join("")}</table>`}
+    ${g.hist?`<div class="note ai">${g.hist}</div>`:""}
+    ${g.note?`<div class="note ${g.st==="bad"?"warn":""}">${g.note}</div>`:""}
+    <div class="row2"><button class="btn sec sm" style="width:100%" onclick="ptoast('Demo: tải file GCN ${g.no}')">${I.doc} Tải GCN</button><button class="btn acc sm" style="width:100%" onclick="go('declare',{tab:'bt'})">Yêu cầu bồi thường</button></div>
+   </div>`:""}</div>`}).join("")+`<div class="cap" style="margin-top:4px">Trạng thái: Hiệu lực · Hết hạn. Bấm vào hợp đồng để xem chi tiết.</div>`;
+ } else {
+  const list=st.claims.map(c=>{const p=c.status==="Đã chi trả"?"ok":c.status==="Chờ chuyên viên tư vấn"?"mut":c.status==="Chuyên viên đang xử lý"||c.status==="Chờ cán bộ liên hệ"?"warn":"ai";
+   const tgt=c.scen==="past"?"past":c.scen==="s6"?"unclear":c.scen==="unk"?"unclear":(c.scen==="s3"||c.scen==="s4")?"exclRecv":c.status==="Đã chi trả"?"paid":c.status==="Chờ bạn xác nhận"?"calc":/chuyên viên/i.test(c.status)?"cs":"guide";
+   return `<button class="claim" onclick="openClaim('${c.scen}','${tgt}')"><span class="tx"><b>${c.type||SC[c.scen].type}</b><small>${c.code}</small></span><span class="pill ${p}">${c.status}</span>${I.chev}</button>`}).join("");
+  inner=`${list?`<div class="hsec">Yêu cầu của bạn</div>${list}`:""}
+  <div class="card ${list?"":"flat"}"><div class="empty">
+   <div class="big">${I.shield}</div>
+   <p class="ttl">Gặp sự cố với tài khoản hoặc thẻ?</p>
+   <p class="sub">Bạn chỉ cần kể lại sự việc. ${INSURER} sẽ đọc nội dung, tìm hợp đồng phù hợp và hướng dẫn bạn từng bước.</p>
+   <button class="btn acc" style="margin-top:6px" onclick="go('declare',{narr:''})">＋ Tạo yêu cầu bồi thường</button>
+   <p class="sub" style="font-size:11px">Hotline bồi thường 1900 xxxx (24/7)</p>
+  </div></div>`;
+ }
+ return {top:sbar("hub","15:52"),html:hubHead()+verStrip()+tabs+`<div class="body"><div class="hb-body">${inner}</div></div>`,foot:`<div class="foot" style="padding-top:4px">${homeBar}</div>`}
+}
+window.toggleCt=no=>{st.open=st.open===no?null:no;render()};
+window.openClaim=(s,t)=>{if(t==="past")return ptoast(PAST.note);st.scen=s;if(t==="paid"&&!st.acct.checked)st.acct={bank:DEMO_ACCT.bank,no:DEMO_ACCT.no,checked:true};if(t!=="guide")fillDocs();go(t)};
+
+/* ---- 3. Kể lại sự việc ---- */
+function scrDeclare(){
+ return {top:sbar("hub","15:52"),html:hubHead("Yêu cầu bồi thường","Bước 1 · Kể lại sự việc")+`<div class="body"><div class="hb-body">
+  <div><p class="ttl" style="font-size:17px">Chuyện gì đã xảy ra với bạn?</p><p class="sub">Hãy kể lại sự việc.</p></div>
+  <textarea id="narr" aria-label="Nội dung sự việc" placeholder="Ví dụ: lúc mấy giờ, chuyện gì xảy ra, bị trừ bao nhiêu tiền, qua kênh nào..." oninput="st_narr(this.value)">${esc(st.narr)}</textarea>
+  <button class="mic" onclick="speak()">${I.mic} Nói thay vì gõ</button>
+  <div class="hints"><span>Thời điểm xảy ra và lúc bạn phát hiện</span><span>Số tiền bị trừ, số giao dịch</span><span>Giao dịch bị trừ tiền đã diễn ra như thế nào</span></div>
+  <div class="hsec">Mẫu tình huống demo</div>
+  <div class="chips">${DEMO_KEYS.map(k=>`<button class="chip demo" onclick="useSample('${k}')">${SC[k].short}</button>`).join("")}</div>
+ </div></div>`,foot:`<div class="foot"><label class="chk"><input type="checkbox" id="commit" ${st.commit?"checked":""} onchange="st_commit(this.checked)">${COMMIT_TXT}</label><button class="btn acc" ${canSend()?"":"disabled"} id="sendBtn" onclick="submitNarr()">Gửi thông tin sự kiện bảo hiểm</button>${homeBar}</div>`}
+}
+const COMMIT_TXT="Tôi cam kết nội dung khai báo trên là đúng sự thật và đồng ý dùng nội dung này làm Giấy yêu cầu bồi thường bảo hiểm (bản điện tử).";
+const canSend=()=>st.narr.trim().length>=15&&st.commit;
+window.st_commit=v=>{st.commit=v;const b=$("sendBtn");if(b)b.disabled=!canSend()};
+window.st_narr=v=>{st.narr=v;const b=$("sendBtn");if(b)b.disabled=!canSend()};
+window.useSample=k=>{st.scen=k;st.narr=SC[k].text;render()};
+window.speak=()=>{const t=(SC[st.scen].text||SC.s1.text);st.narr="";let i=0;clearT();const ta=$("narr");
+  const step=()=>{i+=4;st.narr=t.slice(0,i);if(ta){ta.value=st.narr}const b=$("sendBtn");if(b)b.disabled=!canSend();if(i<t.length)later(step,22)};step()};
+function classify(t){const x=t.toLowerCase();
+ const gaveOtp=/(đọc|cung cấp|đưa|gửi|nói)[^.]{0,25}(otp|mã xác thực|mật khẩu)/.test(x)&&!/không[^.]{0,15}(cung cấp|đọc|đưa|gửi|nói)[^.]{0,25}(otp|mã xác thực|mật khẩu)/.test(x);
+ if(gaveOtp)return "s4";
+ if(/link|đường dẫn|tin nhắn|ứng dụng|chiếm đoạt|điều khiển|giả danh/.test(x))return "s1";
+ if(/vay|mượn|người quen|người thân/.test(x))return "s3";
+ if(/thẻ|quẹt|atm|rơi ví|mất ví/.test(x))return "s2";
+ return "unk"}
+window.submitNarr=()=>{st.ans=null;if(st.scen==="s5"||st.scen==="s6")return go("sending",{retry:false});st.scen=classify(st.narr);go("analyzing")};
+window.retrySend=()=>{st.scen="s1";go("sending",{retry:true})};
+function runSending(){later(()=>{if(st.retry){st.retry=false;go("analyzing");return}if(st.scen==="s6"){ensureClaim("Chờ cán bộ liên hệ");go("unclear")}else go("sendErr")},1400)}
+
+/* ---- 3b. Gửi và hai trường hợp lỗi ---- */
+function scrSending(){
+ return {top:sbar("hub","15:52"),html:hubHead("Yêu cầu bồi thường","Đang gửi")+`<div class="body"><div class="anl"><div class="orb"></div><p class="ttl" style="text-align:center">Đang gửi thông tin sự kiện bảo hiểm</p><p class="sub" style="text-align:center">Vui lòng giữ màn hình này trong giây lát.</p></div></div>`,foot:`<div class="foot" style="padding-top:4px">${homeBar}</div>`}
+}
+const callBtn=(label,num,cls)=>`<button class="btn ${cls||"sec"} sm" style="width:100%;margin-top:6px" onclick="ptoast('Demo: gọi ${num}')">${PHONE_I} ${label} ${num}</button>`;
+const upBtn=(state,fn)=>state==="dn"?`<span class="dn-t">✓ Đã nhận</span>`:state==="rd"?`<span class="reading" style="font-size:11px"><span class="spin"></span>Đang nhận</span>`:`<button class="mini" onclick="${fn}">${I.cam} Chụp hoặc chọn ảnh</button>`;
+const genDocs=(off)=>`<div class="card"><p class="ttl" style="font-size:14px">Chứng từ cần chuẩn bị</p>${off
+  ?`<ul class="lst">${GENDOCS.map(d=>`<li><i class="no">•</i><span>${d}</span></li>`).join("")}</ul><p class="sub" style="font-size:11px">Bạn nộp ảnh chứng từ sau khi gửi lại thành công, hoặc theo hướng dẫn của cán bộ.</p>`
+  :`<div>${GENDOCS.map((d,i)=>{const k=st.scen+"_"+i;return `<div class="drow"><span class="t">${d}</span>${i===0?`<span class="pill ok" style="font-size:10px">Đã có (điện tử)</span>`:upBtn(st.gd[k],`shootG('${k}')`)}</div>`}).join("")}</div><p class="sub" style="font-size:11px">Chưa có đủ cũng không sao, bạn nộp thêm sau trong mục Bồi thường.</p>`}</div>`;
+window.shootG=k=>{st.gd[k]="rd";render();later(()=>{st.gd[k]="dn";render()},900)};
+function scrSendErr(){
+ return {top:sbar("hub","15:52"),html:hubHead("Yêu cầu bồi thường","Chưa gửi được")+`<div class="body"><div class="hb-body">
+  <div class="card" style="border-color:#f1c4bf;background:var(--p-bad-soft)"><p class="ttl" style="color:var(--p-bad)">Chưa gửi được thông tin</p>
+   <p class="sub" style="color:var(--p-ink);font-size:12.5px">Hệ thống đang gặp sự cố nên thông tin của bạn chưa được ghi nhận. Hãy chọn hợp đồng để xem việc cần làm ngay, và chụp lại màn hình này.</p>
+   <div class="kv"><div><div class="k">Mã sự cố</div><div class="v code">ER-2610-1552-07</div></div><div><div class="k">Thời điểm</div><div class="v">15:52, 20/10/2026</div></div></div>
+   <div class="note ok">Nội dung bạn đã kể được lưu trên máy. Khi bấm Gửi lại, bạn không cần kể lại.</div></div>
+  ${pickerHTML()}
+  ${st.pick?kindGuide("err"):""}
+  ${scamNote()}
+ </div></div>`,foot:`<div class="foot"><button class="btn acc" onclick="retrySend()">Gửi lại</button><button class="btn sec" onclick="ptoast('Demo: gọi hotline bồi thường ${CLAIM_HOT}')">Gọi hotline bồi thường ${CLAIM_HOT}</button>${homeBar}</div>`}
+}
+function pickerHTML(){
+ if(!st.pick)return `<div class="card"><p class="ttl" style="font-size:14px">Bạn muốn yêu cầu bồi thường cho hợp đồng nào?</p><p class="sub" style="font-size:11.5px">Chọn hợp đồng để nhận hướng dẫn và danh sách chứng từ phù hợp.</p>
+  ${GCNS.filter(g=>g.st==="ok").map(g=>`<button class="pick" onclick="pickG('${g.no}')"><span class="pol">${ico(g,34)}</span><span class="tx"><b>${g.prod}</b><small>${g.no}</small><em>${g.desc}</em></span>${I.chev}</button>`).join("")}
+  <button class="pick" onclick="pickG('none')"><span class="tx"><b>Tôi không chắc</b><em>Cán bộ sẽ hỏi thêm để xác định hợp đồng phù hợp.</em></span>${I.chev}</button></div>`;
+ const g=st.pick==="none"?null:gcnBy(st.pick);
+ return `<div class="card"><div class="aihd"><b style="color:var(--p-ink)">Hợp đồng bạn chọn</b><button class="linkbtn" style="padding:0;color:var(--hub-acc)" onclick="pickG(null)">Đổi hợp đồng</button></div>${g?`<div class="gcn"><div class="h"><b>${g.prod}</b><span class="pill ok">Hiệu lực</span></div><small>${g.no} · ${g.from} đến ${g.to}</small></div>`:`<p class="sub" style="color:var(--p-ink);font-size:12.5px">Tôi không chắc hợp đồng nào</p>`}</div>`;
+}
+const kindOf=()=>st.pick==="none"?"none":gcnBy(st.pick).kind;
+window.pickG=v=>{st.pick=v;render()};
+const tlHTML=items=>`<div class="tl">${items.map((x,i)=>`<div class="tl-i"><span class="m ${x.m}">${x.m==="wr"?"!":x.m==="dn"?"✓":i+1}</span><div><b>${x.t}</b>${x.dl}<p>${x.p}</p>${x.act||""}</div></div>`).join("")}</div>`;
+function kindGuide(ctx){
+ const k=kindOf(),K=KG[k];let it=K.items();
+ if(ctx==="err"){const hot={m:"wt",t:`Gọi hotline bồi thường ${INSURER}`,dl:'<span class="dl hot">Hotline 24/7</span>',p:`Cán bộ ghi nhận sự việc và lập đơn yêu cầu bồi thường giúp bạn. Thời điểm gọi được tính là thời điểm bạn thông báo.<span class="pend">CHỜ CHỐT</span>`,act:callBtn("Gọi",CLAIM_HOT)};it=k==="cyber"?[it[0],hot,...it.slice(1)]:[hot,...it]}
+ const off=ctx==="err";
+ const docs=off?`<ul class="lst">${K.docs.map(d=>`<li><i class="no">•</i><span>${d}</span></li>`).join("")}</ul><p class="sub" style="font-size:11px">Bạn nộp ảnh chứng từ sau khi gửi lại thành công, hoặc theo hướng dẫn của cán bộ.</p>`
+  :`<div>${K.docs.map((d,i)=>{const key=k+"_"+i;return `<div class="drow"><span class="t">${d}</span>${d==="Giấy yêu cầu bồi thường bảo hiểm"?'<span class="pill ok" style="font-size:10px">Đã có (điện tử)</span>':upBtn(st.gd[key],`shootG('${key}')`)}</div>`}).join("")}</div>${K.note?"":`<p class="sub" style="font-size:11px">Chưa có đủ cũng không sao, bạn nộp thêm sau trong mục Bồi thường.</p>`}`;
+ return `<div class="card"><p class="ttl" style="font-size:14px">${off?"Việc cần làm ngay":"Hướng dẫn"}${K.name?` · ${K.name}`:""}</p>${tlHTML(it)}</div>
+  <div class="card"><p class="ttl" style="font-size:14px">Chứng từ cần chuẩn bị</p>${docs}${K.note?`<p class="sub" style="font-size:11px">${K.note}</p>`:""}</div>`;
+}
+const contactCard=()=>`<div class="card"><p class="ttl" style="font-size:14px">Cán bộ sẽ liên hệ trực tiếp với bạn</p>
+   <div class="acct"><span class="ico" style="background:var(--hub)">${PHONE_I}</span><div><b style="font-size:13px">Gọi tới số ${CUST.phone}</b><div class="sub" style="font-size:11.5px">Trong 4 giờ làm việc<span class="pend">CHỜ CHỐT</span> · cán bộ ${INSURER}</div></div></div>
+   <p class="sub" style="font-size:11.5px;color:var(--p-ink)">Cần gấp, bạn gọi hotline bồi thường <b>${CLAIM_HOT}</b> (24/7).</p></div>`;
+function scrReceived(){
+ const items=[
+  {m:"dn",t:"Báo Công ty bảo hiểm",dl:'<span class="dl ok">Mốc 24 giờ · đạt</span>',p:`Yêu cầu đã được gửi tới ${INSURER}.`},
+  {m:"wt",t:"Trình báo Công an",dl:'<span class="dl hot">Hạn 15:35 ngày 21/10/2026</span>',p:"Chỉ cần giấy xác nhận đã tiếp nhận trình báo có dấu của Công an."},
+  {m:"nx",t:"Nộp đủ chứng từ",dl:'<span class="dl">Hạn 20/10/2027 · 1 năm kể từ ngày xảy ra sự kiện</span>',p:"Chuyên viên sẽ báo bạn danh sách chứng từ chính xác sau khi phân loại."}];
+ return {top:sbar("hub","15:52"),html:hubHead("Yêu cầu bồi thường","Đã tiếp nhận")+`<div class="body"><div class="hb-body">
+  <div class="card"><div class="okhd"><span class="c">${I.checkS}</span><div><p class="ttl">Đã tiếp nhận yêu cầu</p><p class="sub"><span class="code">${codeFor()}</span> · 15:52, 20/10/2026</p></div></div>
+   <div class="note">Chuyên viên ${INSURER} đang xem nội dung bạn kể để xác định quyền lợi. Bạn sẽ nhận thông báo trong app ${BANK}.<span class="pend">CHỜ CHỐT SLA</span></div></div>
+  <div class="card"><p class="ttl" style="font-size:14px">Việc cần làm ngay</p>
+   <div class="tl">${items.map((x,i)=>`<div class="tl-i"><span class="m ${x.m}">${x.m==="dn"?"✓":i+1}</span><div><b>${x.t}</b>${x.dl}<p>${x.p}</p></div></div>`).join("")}</div></div>
+  ${genDocs()}
+  ${scamNote()}
+ </div></div>`,foot:`<div class="foot"><button class="btn sec" onclick="ptoast('Demo: gọi hotline bồi thường ${CLAIM_HOT}')">Gọi hotline bồi thường ${CLAIM_HOT}</button><button class="btn acc" onclick="go('hub',{tab:'bt'})">Về danh sách bồi thường</button>${homeBar}</div>`}
+}
+
+function scrExclRecv(){
+ const items=[
+  ...(sc().lock?[{m:"dn",t:"Báo ngân hàng",dl:'<span class="dl ok">Đã ghi nhận lúc 15:52</span>',p:`Yêu cầu của bạn đã được chuyển tới ${BANK}. Nếu cần khóa tài khoản ngay, gọi ${BANK_HOT}.`,act:callBtn("Gọi",BANK_HOT)}]:[]),
+  {m:"dn",t:"Báo Công ty bảo hiểm",dl:'<span class="dl ok">Mốc 24 giờ · đạt</span>',p:`Yêu cầu đã được gửi tới ${INSURER}.`},
+  {m:"wt",t:"Trình báo Công an",dl:'<span class="dl hot">Trong 24 giờ kể từ khi phát hiện</span>',p:"Chỉ cần giấy xác nhận đã tiếp nhận trình báo có dấu của Công an."},
+  {m:"nx",t:"Nộp đủ chứng từ",dl:'<span class="dl">Hạn 1 năm kể từ ngày xảy ra sự kiện</span>',p:"Cán bộ bồi thường sẽ hướng dẫn thêm nếu cần chứng từ khác."}];
+ return {top:sbar("hub","15:52"),html:hubHead("Yêu cầu bồi thường","Bước 3 · Đã tiếp nhận")+`<div class="body"><div class="hb-body">
+  <div class="card"><div class="okhd"><span class="c">${I.checkS}</span><div><p class="ttl">Đã tiếp nhận hồ sơ</p><p class="sub"><span class="code">${codeFor()}</span> · 15:52, 20/10/2026</p></div></div></div>
+  <div class="card"><p class="ttl" style="font-size:14px">Cán bộ bồi thường sẽ liên hệ lại với bạn</p>
+   <div class="acct"><span class="ico" style="background:var(--hub)">${PHONE_I}</span><div><b style="font-size:13px">Gọi tới số ${CUST.phone}</b><div class="sub" style="font-size:11.5px">Trong 4 giờ làm việc<span class="pend">CHỜ CHỐT</span> · cán bộ ${INSURER}</div></div></div>
+   <p class="sub" style="font-size:11.5px;color:var(--p-ink)">Cán bộ sẽ trao đổi với bạn về hồ sơ và các bước tiếp theo. Cần gấp, bạn gọi hotline bồi thường <b>${CLAIM_HOT}</b> (24/7).</p></div>
+  <div class="card"><p class="ttl" style="font-size:14px">Việc cần làm</p>
+   <div class="tl">${items.map((x,i)=>`<div class="tl-i"><span class="m ${x.m}">${x.m==="dn"?"✓":i+1}</span><div><b>${x.t}</b>${x.dl}<p>${x.p}</p>${x.act||""}</div></div>`).join("")}</div></div>
+  ${genDocs()}
+  ${scamNote()}
+ </div></div>`,foot:`<div class="foot"><button class="btn sec" onclick="ptoast('Demo: gọi hotline bồi thường ${CLAIM_HOT}')">Gọi hotline bồi thường ${CLAIM_HOT}</button><button class="btn acc" onclick="go('hub',{tab:'bt'})">Về danh sách bồi thường</button>${homeBar}</div>`}
+}
+function scrUnclear(){
+ return {top:sbar("hub","15:52"),html:hubHead("Yêu cầu bồi thường","Bước 3 · Đã tiếp nhận")+`<div class="body"><div class="hb-body">
+  <div class="card"><div class="okhd"><span class="c">${I.checkS}</span><div><p class="ttl">Đã tiếp nhận yêu cầu</p><p class="sub"><span class="code">${codeFor()}</span> · 15:52, 20/10/2026</p></div></div>
+   <p class="sub" style="color:var(--p-ink);font-size:12.5px">${INSURER} chưa xác định được sự kiện bảo hiểm từ nội dung bạn kể. Hãy chọn hợp đồng bạn muốn yêu cầu bồi thường để nhận hướng dẫn phù hợp.</p></div>
+  ${pickerHTML()}
+  ${st.pick?kindGuide("recv"):""}
+  ${contactCard()}
+  ${scamNote()}
+ </div></div>`,foot:`<div class="foot"><button class="btn acc" onclick="ptoast('Demo: gọi hotline bồi thường ${CLAIM_HOT}')">Gọi hotline bồi thường ${CLAIM_HOT}</button><button class="btn sec" onclick="go('declare')">Kể thêm chi tiết</button>${homeBar}</div>`}
+}
+
+/* ---- 4. AI phân tích ---- */
+const ANL=["Đọc nội dung khai báo","Xác định loại sự kiện và quyền lợi","Đối chiếu hợp đồng của bạn","Kiểm tra điều khoản loại trừ của chương trình","Kiểm tra mốc thời gian và hạn mức còn lại"];
+function scrAnalyzing(){
+ return {top:sbar("hub","15:52"),html:hubHead("Yêu cầu bồi thường","Bước 2 · Phân tích sự việc")+`<div class="body"><div class="anl">
+  <div class="orb"></div><p class="ttl" style="text-align:center">${INSURER} đang xem xét sự việc của bạn</p>
+  ${ANL.map((a,i)=>`<div class="anl-step" id="an${i}"><span class="s">${i+1}</span>${a}</div>`).join("")}
+ </div></div>`,foot:`<div class="foot" style="padding-top:4px">${homeBar}</div>`}
+}
+function stepAnim(list,gap,done){list.forEach((_,i)=>{later(()=>{const e=$("an"+i);if(e)e.classList.add("on");const p=$("an"+(i-1));if(p){p.classList.add("dn");p.querySelector(".s").textContent="✓"}},250+i*gap)});later(done,250+list.length*gap+200)}
+function runAnalyze(){stepAnim(ANL,480,()=>{if(st.scen==="unk"){ensureClaim("Chờ cán bộ liên hệ");go("unclear")}else go("aiResult")})}
+
+function aiFields(s){return `<div class="kv">
+ <div class="full"><div class="k">Loại sự kiện</div><div class="v">${s.type}</div></div>
+ ${s.benefit?`<div class="full"><div class="k">Quyền lợi liên quan</div><div class="v">${s.benefit}</div></div>`:""}
+ <div><div class="k">Số tiền bị mất</div><div class="v">${s.amountTxt}</div></div>
+ ${s.otp?`<div><div class="k">Cách giao dịch diễn ra</div><div class="v">${s.otp}</div></div>`:`<div><div class="k">Kênh</div><div class="v">${s.channel}</div></div>`}
+ <div><div class="k">Xảy ra lúc</div><div class="v">${s.occ}</div></div>
+ <div><div class="k">Phát hiện lúc</div><div class="v">${s.found}</div></div>
+ ${s.otp?`<div class="full"><div class="k">Kênh</div><div class="v">${s.channel}</div></div>`:""}</div>`}
+function scrAiResult(){
+ const s=sc();
+ const head=`<div class="card aicard"><div class="aihd"><b>${INSURER} đã ghi nhận sự việc</b></div>${aiFields(s)}
+  <button class="linkbtn" style="color:var(--hub-acc)" onclick="go('declare')">Chưa đúng? Sửa nội dung khai báo</button></div>`;
+ if(s.route==="out"&&!s.hit){
+  const body=s.hit
+   ? `<div class="gcn" style="border-color:var(--p-bad);background:var(--p-bad-soft)"><div class="h"><b style="color:var(--p-bad)">${s.hit[0]} · ${s.hit[1]}</b></div><small style="font-family:var(--f-ui);font-size:11.5px;color:var(--p-ink)">Thông tin liên quan trong khai báo: ${s.hit[2]}</small></div>
+      <p class="sub" style="color:var(--p-ink);font-size:12.5px">Theo điều khoản của chương trình CT-DGB-01, trường hợp này có thể không được bồi thường. Chuyên viên sẽ đối chiếu thêm thông tin từ ${BANK} trước khi kết luận.</p>`
+   : `<p class="sub" style="color:var(--p-ink);font-size:12.5px">Nội dung chưa đủ để xác định loại sự kiện. ${INSURER} chưa thể kết luận. Bạn có thể kể thêm thời điểm, số tiền bị trừ và bạn bị lừa qua kênh nào.</p>`;
+  return {top:sbar("hub","15:52"),html:hubHead("Yêu cầu bồi thường","Bước 2 · Kết quả phân tích")+`<div class="body"><div class="hb-body">${head}
+   <div class="card"><div class="aihd"><b style="color:var(--p-warn)">${s.outTitle}</b></div>${body}
+    <div class="note ai">Đây chưa phải kết quả chính thức. ${INSURER} sẽ xác nhận lần cuối trước khi trả lời bạn.</div>
+   </div></div></div>`,
+   foot:`<div class="foot"><button class="btn acc" onclick="toCsOut()">Nhờ chuyên viên iBaohiem kiểm tra</button><button class="btn sec" onclick="go('declare')">Kể thêm chi tiết</button>${homeBar}</div>`}
+ }
+ const q=st.scen==="s2"?`<div class="card aicard"><div class="aihd"><b>${INSURER} cần hỏi thêm 1 câu</b></div>
+   <p class="sub" style="color:var(--p-ink);font-size:12.5px">Quy tắc yêu cầu báo ngân hàng trong 30 phút kể từ khi phát hiện. Bạn đã báo ngân hàng khóa thẻ chưa?</p>
+   <div class="q"><button class="opt ${st.ans==="yes"?"on":""}" onclick="answer('yes')">Đã gọi tổng đài khóa thẻ lúc 08:40</button><button class="opt ${st.ans==="no"?"on":""}" onclick="answer('no')">Chưa báo ngân hàng</button></div></div>`:"";
+ const gc=s.gcns.map(x=>{const g=gcnBy(x.no);return `<div class="gcn"><div class="h"><b>${g.prod}</b><span class="pill ${g.st}">${g.st==="ok"?"Hiệu lực":"Hết hạn"}</span></div><small>${g.no} · ${g.from} đến ${g.to}</small></div>
+   <ul class="lst">${x.why.map(w=>`<li><i class="${w[0]}">${w[0]==="ai"?"i":"✓"}</i>${w[1]}</li>`).join("")}</ul>`}).join("");
+ const VU=20000000, est=Math.min(s.amount,VU), ex=!!s.hit;
+ const lim=`<div class="card"><p class="ttl" style="font-size:14px">Quyền lợi bảo hiểm</p><table class="bt calc"><tr><td>Tên quyền lợi</td><td style="white-space:normal;text-align:right">${s.benefit}</td></tr><tr><td>Số tiền bảo hiểm mỗi vụ</td><td>${vnd(VU)}</td></tr><tr><td>Hạn mức năm còn lại</td><td>88.000.000đ</td></tr>${ex?"":`<tr><td>Thiệt hại bạn khai</td><td>${vnd(s.amount)}</td></tr><tr class="tot"><td><b>Bồi thường tối đa dự kiến</b></td><td>${vnd(est)}</td></tr>`}</table>${!ex&&s.amount>VU?`<div class="note warn">Phần thiệt hại ${vnd(s.amount-VU)} vượt số tiền bảo hiểm mỗi vụ nên không được bồi thường.</div>`:""}<p class="sub" style="font-size:11px">${ex?"Cán bộ bồi thường xác định số tiền bồi thường sau khi xem xét hồ sơ.":"Số tiền chính thức được tính sau khi đủ chứng từ hợp lệ."}</p></div>`;
+ return {top:sbar("hub","15:52"),html:hubHead("Yêu cầu bồi thường","Bước 2 · Kết quả phân tích")+`<div class="body"><div class="hb-body">${head}${s.lock?lockBar():""}${q}${lim}
+  <div class="card"><div class="aihd"><b style="color:var(--p-ink)">Hợp đồng áp dụng</b><span class="pill ok">Đã xác định</span></div>
+   ${gc}
+   ${s.multi?`<div class="note ai">${s.multi}</div>`:""}
+   ${s.aiNote?`<div class="note ai">${s.aiNote}</div>`:""}
+  </div>
+  ${ex?"":`<div class="card"><div class="aihd"><b style="color:var(--p-ink)">Điều khoản loại trừ</b><span class="pill mut">Chương trình CT-DGB-01</span></div>
+   <ul class="lst">${s.excl.map((e,i)=>`<li><i class="ok">✓</i><span><b>${e[0]} · ${EXCL[i][1]}</b><br><span style="color:var(--p-muted)">${e[1]}</span></span></li>`).join("")}
+    <li><i class="ok">✓</i><span><b>Thời gian chờ</b><br><span style="color:var(--p-muted)">Không áp dụng</span></span></li></ul>
+  </div>`}
+  ${s.notApply.length?`<div class="card"><div class="hsec" style="margin:0">Không áp dụng</div>
+   <ul class="lst">${s.notApply.map(n=>`<li><i class="no">–</i><span><span class="code" style="color:var(--p-muted)">${n[0]}</span> · ${n[1]}</span></li>`).join("")}</ul></div>`:""}
+ </div></div>`,
+  foot:`<div class="foot"><button class="btn acc" ${st.scen==="s2"&&!st.ans?"disabled":""} onclick="${ex?"confirmExcl()":"confirmAi()"}">Đúng, tạo yêu cầu bồi thường</button>${homeBar}</div>`}
+}
+window.answer=a=>{st.ans=a;render()};
+window.confirmExcl=()=>{ensureClaim("Chờ cán bộ liên hệ");go("exclRecv")};
+window.confirmAi=()=>{ensureClaim("Chờ bổ sung chứng từ");go("guide")};
+window.toCsOut=()=>{ensureClaim("Chờ chuyên viên tư vấn");go("cs")};
+
+/* ---- 5. Hướng dẫn và mốc thời gian ---- */
+function scrGuide(){
+ const s=sc(), s2=st.scen==="s2";
+ const bankItem=s2
+  ? (st.ans==="no"
+     ? {m:"wr",t:"Báo ngân hàng",dl:'<span class="dl hot">Mốc 30 phút · đã quá mốc</span>',p:`Bạn phát hiện lúc 08:30 và gửi yêu cầu trên ví bảo hiểm lúc 15:52. Yêu cầu đã được chuyển tới ${BANK} để khóa thẻ. Chuyên viên sẽ xem xét việc báo trễ.`}
+     : {m:"dn",t:"Báo ngân hàng",dl:'<span class="dl ok">Mốc 30 phút · đạt</span>',p:`Bạn đã gọi tổng đài khóa thẻ lúc 08:40, 10 phút sau khi phát hiện. Yêu cầu trên ví bảo hiểm đã được chuyển tới ${BANK}.`})
+  : {m:"dn",t:"Báo ngân hàng",dl:'<span class="dl ok">Mốc 30 phút · đạt</span>',p:`Yêu cầu bạn gửi trên ví bảo hiểm được tính là báo ngân hàng: ghi nhận lúc 15:52, 17 phút sau khi phát hiện. ${BANK} tiến hành khóa và tra soát.`};
+ const items=[bankItem,
+  {m:"dn",t:"Báo Công ty bảo hiểm",dl:'<span class="dl ok">Mốc 24 giờ · đạt</span>',p:`Yêu cầu này đã được gửi tới ${INSURER}.`},
+  {m:"wt",t:"Trình báo Công an",dl:`<span class="dl hot">Hạn ${s.police} · ${s.policeLeft}</span>`,p:"Chỉ cần giấy xác nhận đã tiếp nhận trình báo có dấu của Công an, không cần chờ kết luận điều tra.",act:`<button class="linkbtn" onclick="openSheet('police')">Xem đơn trình báo soạn sẵn</button>`},
+  {m:"wt",t:"Nhận thư phản hồi của ngân hàng",dl:'<span class="dl">Chờ thư phản hồi</span>',p:`Khi ${BANK} phản hồi từ chối bồi thường toàn bộ hoặc một phần, ${INSURER} nhận thông tin này để xử lý tiếp. Nếu bạn nhận được giấy xác nhận, hãy chụp và nộp ở bước chứng từ.<span class="pend">CHỜ CHỐT với ngân hàng</span>`},
+  {m:"nx",t:"Nộp đủ chứng từ",dl:`<span class="dl">Hạn ${s2?"18/10/2027":"20/10/2027"} · 1 năm kể từ ngày xảy ra sự kiện</span>`,p:"Theo Luật Kinh doanh bảo hiểm. Bạn nộp càng sớm thì được giải quyết càng sớm. Thời gian chờ thư phản hồi của ngân hàng không làm bạn mất quyền yêu cầu bồi thường."},
+  {m:"nx",t:"Nhận tiền bồi thường",dl:'<span class="dl">Trong 15 ngày kể từ khi đủ hồ sơ</span>',p:`${INSURER} giải quyết trong 15 ngày kể từ ngày nhận đủ hồ sơ. Hồ sơ đủ điều kiện xử lý tự động được chi ngay sau khi bạn xác nhận phương án.`}];
+ return {top:sbar("hub","15:52"),html:hubHead("Yêu cầu bồi thường","Bước 3 · Việc cần làm")+`<div class="body"><div class="hb-body">
+  <div class="card"><div class="okhd"><span class="c">${I.checkS}</span><div><p class="ttl">Đã tiếp nhận yêu cầu</p><p class="sub"><span class="code">${codeFor()}</span> · 15:52, 20/10/2026</p></div></div></div>
+  ${sc().lock?lockBar():""}
+  ${scamNote()}
+  <div class="card"><p class="ttl" style="font-size:14px">Việc cần làm theo mốc thời gian</p>
+   <div class="tl">${items.map((x,i)=>`<div class="tl-i"><span class="m ${x.m}">${x.m==="dn"?"✓":x.m==="wr"?"!":i+1}</span><div><b>${x.t}</b>${x.dl}<p>${x.p}</p>${x.act||""}</div></div>`).join("")}</div>
+  </div>
+  <div class="card"><p class="ttl" style="font-size:14px">Chứng từ cần chuẩn bị</p>
+   <div>${DOCS[st.scen].map(d=>`<div class="drow"><span class="t">${d.t}</span>${d.auto?'<span class="pill ok" style="font-size:10px">Đã có (điện tử)</span>':upBtn(st.docs[d.id],`shootGuide('${d.id}')`)}</div>`).join("")}</div>
+   <p class="sub" style="font-size:11px">Chụp ngay chứng từ đã có. Chứng từ còn thiếu bạn nộp sau ở bước chứng từ.</p></div>
+  <div class="card"><p class="ttl" style="font-size:14px">Giữ lại bằng chứng, hạn chế thiệt hại</p>
+   <ul class="tips"><li>Không xóa tin nhắn, lịch sử cuộc gọi, nội dung trao đổi với đối tượng.</li><li>Chụp lại màn hình ứng dụng lạ và trang web giả làm bằng chứng, sau đó gỡ ứng dụng lạ và đăng nhập lại app ngân hàng.</li><li>Đổi mật khẩu ngân hàng, không cung cấp OTP cho bất kỳ ai.</li></ul></div>
+ </div></div>`,foot:`<div class="foot"><button class="btn acc" onclick="go('docs')">Nộp chứng từ</button><button class="btn sec" onclick="go('hub',{tab:'bt'})">Để sau, quay lại danh sách</button>${homeBar}</div>`}
+}
+window.shootGuide=id=>{st.docs[id]="rd";render();later(()=>{st.docs[id]="dn";render()},900)};
+window.openSheet=k=>{st.sheet=k;render()};
+window.closeSheet=()=>{st.sheet=null;render()};
+function policeDraft(){return `CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
+Độc lập - Tự do - Hạnh phúc
+
+ĐƠN TRÌNH BÁO
+
+Kính gửi: Công an phường ....................
+
+Tôi tên: ${CUST.name}, CCCD số: ${CUST.cccd}
+Số điện thoại: ${CUST.phone}
+
+Tôi xin trình báo sự việc như sau:
+${st.scen==="s1"?`Khoảng 15 giờ 20 phút ngày 20/10/2026, tôi nhận được tin nhắn SMS từ đầu số "SacomBnk" thông báo tài khoản bị tạm khóa, kèm đường link xacminh-taikhoan.top. Tôi bấm vào, đường link tự tải về một ứng dụng lạ và điện thoại bị điều khiển từ xa. Lúc 15 giờ 35 phút, tôi phát hiện tài khoản số ${CUST.acctFull} tại ${BANK} bị trừ 2 giao dịch (30.000.000đ và 20.000.000đ), tổng 50.000.000đ, chuyển đến tài khoản mang tên NGUYEN VAN T. Tôi không cung cấp mã OTP cho bất kỳ ai.`:`Chiều ngày 18/10/2026 tôi đánh rơi ví tại chợ, trong ví có thẻ ghi nợ ${BANK} số •••• 5521. Lúc 08 giờ 30 phút ngày 20/10/2026, tôi phát hiện thẻ đã bị sử dụng 3 lần trong chiều 18/10/2026, tổng 4.200.000đ.`}
+
+Tôi đã thông báo cho ngân hàng để khóa ${st.scen==="s1"?"tài khoản":"thẻ"}. Đề nghị cơ quan Công an tiếp nhận, xác minh và xử lý.
+
+Tôi cam đoan nội dung trên là đúng sự thật.
+                         Người trình báo
+                         ${CUST.name}`}
+
+/* ---- 6. Chứng từ ---- */
+function scrDocs(){
+ const list=DOCS[st.scen]; const done=list.filter(d=>d.auto||st.docs[d.id]==="dn").length;
+ const cards=list.map((d,i)=>{const stt=d.auto?"dn":st.docs[d.id]||"";
+  let body="";
+  if(d.auto)body=`<div class="note ok">Đã có bản điện tử, lập từ khai báo của bạn. <button class="linkbtn" style="padding:0;color:inherit;text-decoration:underline" onclick="openSheet('form')">Xem giấy</button></div>`;
+  else if(stt==="rd")body=`<div class="reading"><span class="spin"></span>Đang kiểm tra chứng từ...</div>`;
+  else if(stt==="dn")body=`<div class="shot"><span class="thumb"></span><div class="ocr">${d.ocr.map(r=>`<div class="r"><span>${r[0]}</span><b>${r[1]}</b></div>`).join("")}</div></div>
+    <ul class="lst">${d.chk.map(c=>`<li><i class="${c[0]}">${c[0]==="ai"?"i":c[0]==="wr"?"!":"✓"}</i>${c[1]}</li>`).join("")}</ul>`;
+  else body=`<button class="camb" onclick="shoot('${d.id}')">${I.cam} Chụp hoặc chọn ảnh</button>`;
+  return `<div class="doc ${stt==="dn"?"dn":""}"><div class="h"><span class="ix">${stt==="dn"?"✓":i+1}</span><div class="tx"><b>${d.t}</b><small>${d.d}</small></div></div>${body}</div>`}).join("");
+ return {top:sbar("hub","09:02"),html:hubHead("Chứng từ bồi thường",codeFor())+`<div class="body"><div class="hb-body">
+  <div class="card"><div class="aihd"><b style="color:var(--p-ink)">Đã có ${done}/${list.length} chứng từ</b></div>
+   <div class="prog"><i style="width:${done/list.length*100}%"></i></div>
+   <p class="sub" style="font-size:11.5px">${INSURER} kiểm tra ngay khi bạn chụp: đúng loại giấy tờ, đúng người được bảo hiểm, đúng mốc thời gian và khớp số tiền đã khai.</p>
+   ${done<list.length?`<button class="btn sec sm" style="justify-self:start" onclick="shootAll()">Điền nhanh bộ chứng từ demo</button>`:""}</div>
+  ${cards}
+ </div></div>`,foot:`<div class="foot"><button class="btn acc" ${done<list.length?"disabled":""} onclick="go('review')">Nộp hồ sơ</button>${homeBar}</div>`}
+}
+window.shoot=id=>{st.docs[id]="rd";render();later(()=>{st.docs[id]="dn";render()},1100)};
+window.shootAll=()=>{const ids=DOCS[st.scen].filter(d=>!d.auto&&st.docs[d.id]!=="dn").map(d=>d.id);ids.forEach((id,i)=>later(()=>{st.docs[id]="rd";render();later(()=>{st.docs[id]="dn";render()},700)},i*350))};
+
+/* ---- 6b. Kiểm tra hồ sơ và phân luồng ---- */
+const RV=["Đối chiếu chứng từ với khai báo","Kiểm tra điều khoản loại trừ","Tính hạn mức vụ và năm còn lại","Chấm điểm rủi ro gian lận","Xác định luồng xử lý"];
+function scrReview(){
+ if(!st.rvDone)return {top:sbar("hub","09:03"),html:hubHead("Kiểm tra hồ sơ",codeFor())+`<div class="body"><div class="anl"><div class="orb"></div><p class="ttl" style="text-align:center">${INSURER} đang kiểm tra toàn bộ hồ sơ</p>
+  ${RV.map((a,i)=>`<div class="anl-step" id="an${i}"><span class="s">${i+1}</span>${a}</div>`).join("")}</div></div>`,foot:`<div class="foot" style="padding-top:4px">${homeBar}</div>`};
+ if(st.scen==="s1")return {top:sbar("hub","09:03"),html:hubHead("Kiểm tra hồ sơ",codeFor())+`<div class="body"><div class="hb-body">
+  <div class="route g"><span class="lt"></span><div><b>Đủ điều kiện xử lý tự động</b><small>Không cần chờ chuyên viên duyệt</small></div></div>
+  <div class="card"><p class="ttl" style="font-size:14px">Điều kiện đã kiểm tra</p><ul class="lst">
+   <li><i class="ok">✓</i>GCN EI2026-40693306 có hiệu lực tại thời điểm sự kiện</li>
+   <li><i class="ok">✓</i>Đủ 6/6 chứng từ, thông tin đọc được rõ ràng</li>
+   <li><i class="ok">✓</i>Đạt các mốc: báo ngân hàng 30 phút, Công an 24 giờ, trong thời hạn yêu cầu bồi thường 1 năm</li>
+   <li><i class="ok">✓</i>Không thuộc điều khoản loại trừ LT-01, LT-02</li>
+   <li><i class="ok">✓</i>Thời gian chờ: không áp dụng</li>
+   <li><i class="ok">✓</i>Hạn mức năm hợp đồng còn 88.000.000đ</li>
+   <li><i class="ok">✓</i>Điểm rủi ro gian lận 12/100 (ngưỡng 30)<span class="pend">CHỜ CHỐT</span></li>
+   <li><i class="ok">✓</i>Số tiền trong ngưỡng chi tự động<span class="pend">CHỜ CHỐT</span></li></ul></div>
+ </div></div>`,foot:`<div class="foot"><button class="btn acc" onclick="toCalc()">Xem phương án bồi thường</button>${homeBar}</div>`};
+ return {top:sbar("hub","09:03"),html:hubHead("Kiểm tra hồ sơ",codeFor())+`<div class="body"><div class="hb-body">
+  <div class="route y"><span class="lt"></span><div><b>Chuyển chuyên viên iBaohiem xem xét</b><small>Hồ sơ đủ chứng từ nhưng cần người kiểm tra thêm</small></div></div>
+  <div class="card"><p class="ttl" style="font-size:14px">Lý do</p><ul class="lst">
+   <li><i class="ok">✓</i>Đủ 6/6 chứng từ, GCN có hiệu lực tại ngày sự kiện</li>
+   <li><i class="ok">✓</i>Không thuộc điều khoản loại trừ LT-01, LT-02</li>
+   ${st.ans==="no"?'<li><i class="wr">!</i>Báo ngân hàng sau mốc 30 phút</li>':'<li><i class="ok">✓</i>Khóa thẻ 11 phút sau khi phát hiện</li>'}
+   <li><i class="wr">!</i>Thẻ bị dùng ngay sau khi mất nhưng 2 ngày sau mới phát hiện: cần xem xét nghĩa vụ bảo quản thẻ</li>
+   <li><i class="ai">i</i>Ngân hàng đã hoàn 1.200.000đ, phần đề nghị bồi thường còn lại 3.000.000đ, trong hạn mức 20.000.000đ/vụ</li></ul></div>
+ </div></div>`,foot:`<div class="foot"><button class="btn acc" onclick="toCs()">Xem trạng thái hồ sơ</button>${homeBar}</div>`};
+}
+function runReview(){stepAnim(RV,420,()=>{st.rvDone=true;render()})}
+window.toCalc=()=>{setClaim("Chờ bạn xác nhận");go("calc",{agree:false})};
+window.toCs=()=>{setClaim("Chuyên viên đang xử lý");go("cs")};
+
+/* ---- 7. Phương án và xác nhận OTP ---- */
+function scrCalc(){
+ const parts=RES.map(p=>`<div class="card"><div class="aihd"><b style="color:var(--p-ink);font-size:13px">${p.name}</b><span class="code" style="font-size:11px">${p.no}</span></div>
+   <table class="bt calc">
+    <tr><td>Thiệt hại cần bồi thường</td><td>${vnd(p.before)}</td></tr>
+    <tr><td>Hạn mức mỗi vụ</td><td>${vnd(p.vu)}</td></tr>
+    <tr><td>Hạn mức năm còn lại<br><span style="color:var(--p-muted);font-size:11px">${p.usedN?`Đã chi ${p.usedN} vụ, ${vnd(p.usedAmt)}`:"Chưa có vụ nào"} / ${vnd(p.yearCap)}</span></td><td>${vnd(p.yearLeft)}</td></tr>
+    <tr><td>Mức khấu trừ</td><td>${vnd(p.ded)}</td></tr>
+    <tr class="tot"><td><b>Số tiền bồi thường</b></td><td>${vnd(p.pay)}</td></tr>
+   </table></div>`).join("");
+ const after=RES.map(p=>`<tr><td>${p.name}</td><td style="text-align:center;font-weight:600">${p.usedN+(p.pay>0?1:0)}</td><td>${vnd(p.usedAmt+p.pay)}</td><td>${vnd(p.yearLeft-p.pay)}</td></tr>`).join("");
+ return {top:sbar("hub","09:05"),html:hubHead("Phương án bồi thường",codeFor())+`<div class="body"><div class="hb-body">
+  <div class="card" style="text-align:center;gap:4px"><span class="sub">Tổng số tiền bồi thường</span><div class="amt">${vnd(TOTAL)}</div><span class="sub">GCN EI2026-40693306 · thiệt hại thực tế ${vnd(CALC.loss)}</span></div>
+  <div class="card"><p class="ttl" style="font-size:14px">Thiệt hại thực tế</p>
+   <table class="bt calc">
+    <tr><td>Tổn thất có chứng từ (2 giao dịch)</td><td>${vnd(CALC.loss)}</td></tr>
+    <tr><td>Ngân hàng đã hoàn hoặc thu hồi</td><td>${vnd(CALC.refund)}</td></tr>
+    <tr class="tot"><td><b>Cần bồi thường</b></td><td style="color:var(--p-ink)">${vnd(CALC.loss-CALC.refund)}</td></tr></table></div>
+  ${parts}
+  <div class="card"><ul class="lst"><li><i class="ok">✓</i>Số tiền bồi thường ${vnd(TOTAL)} không vượt thiệt hại thực tế ${vnd(CALC.loss-CALC.refund)}</li></ul>
+   <div class="note ai">Thiệt hại 50.000.000đ vượt hạn mức 20.000.000đ cho một vụ, nên bạn được bồi thường 20.000.000đ. Phần 30.000.000đ còn lại vượt hạn mức nên không được bồi thường. Hạn mức năm hợp đồng còn 88.000.000đ nên không ảnh hưởng đến lần này.</div></div>
+  <div class="card"><p class="ttl" style="font-size:14px">Sau lần bồi thường này<br><span class="sub" style="font-weight:500">Năm hợp đồng 20/04/2026 đến 19/04/2027</span></p>
+   <div style="overflow-x:auto"><table class="bt calc" style="min-width:290px"><tr style="color:var(--p-muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.03em"><td>GCN</td><td style="text-align:center;font-weight:600">Số vụ</td><td style="font-weight:600">Đã chi trong năm</td><td style="font-weight:600">Còn lại</td></tr>${after}</table></div></div>
+  <div class="card"><p class="ttl" style="font-size:14px">Tài khoản nhận tiền bồi thường</p>
+   <p class="sub" style="font-size:11.5px">Tài khoản phải đứng tên người được bảo hiểm. Bạn có thể dùng tài khoản ở ngân hàng khác nếu tài khoản bị sự cố đang bị khóa.</p>
+   <label class="lab" for="acBank">Ngân hàng</label>
+   <select class="sel" id="acBank" onchange="st_ac('bank',this.value)">${["Sacombank","Vietcombank","Techcombank","MB Bank","BIDV"].map(b=>`<option ${st.acct.bank===b?"selected":""}>${b}</option>`).join("")}</select>
+   <label class="lab" for="acNo">Số tài khoản</label>
+   <input class="inp" id="acNo" inputmode="numeric" value="${esc(st.acct.no)}" placeholder="Nhập số tài khoản" oninput="st_ac('no',this.value)">
+   ${st.acct.checked?`<div class="acct"><span class="ico">${I.bank}</span><div><b style="font-size:13px">${CUST.name}</b><div class="sub" style="font-size:11.5px">${esc(st.acct.bank)} · ${mask(st.acct.no)} · tên chủ tài khoản khớp người được bảo hiểm</div></div></div>`
+     :`<div class="row2"><button class="btn out sm" style="width:100%" onclick="checkAcct()">Kiểm tra tên chủ tài khoản</button><button class="btn sec sm" style="width:100%" onclick="demoAcct()">Điền tài khoản demo</button></div>`}
+  </div>
+  <div class="card"><p class="ttl" style="font-size:14px">Trước khi xác nhận</p>
+   <p class="sub" style="font-size:11.5px">Điện thoại của bạn có thể đã bị cài ứng dụng điều khiển từ xa. Hãy làm các bước sau để bảo vệ khoản tiền bồi thường.</p>
+   <ul class="tips"><li>Gỡ ứng dụng lạ đã cài từ đường link.</li><li>Đăng xuất, đăng nhập lại app ${BANK} và kích hoạt lại Smart OTP.</li></ul>
+   <label class="chk"><input type="checkbox" id="safe" ${st.safe?"checked":""} onchange="st_safe(this.checked)">Tôi đã gỡ ứng dụng lạ và đăng nhập lại app ${BANK} trên thiết bị an toàn.</label>
+   <label class="chk"><input type="checkbox" id="agree" ${st.agree?"checked":""} onchange="st_agree(this.checked)">Tôi đồng ý với phương án bồi thường và xác nhận các chứng từ đã nộp là đúng sự thật.</label></div>
+  ${scamNote()}
+ </div></div>`,foot:`<div class="foot"><button class="btn acc" id="otpBtn" ${canPay()?"":"disabled"} onclick="sendOtp()">Xác nhận bằng Smart OTP</button>${homeBar}</div>`}
+}
+const canPay=()=>st.agree&&st.safe&&st.acct.checked;
+const upd=()=>{const b=$("otpBtn");if(b)b.disabled=!canPay()};
+window.st_agree=v=>{st.agree=v;upd()};
+window.st_safe=v=>{st.safe=v;upd()};
+window.st_ac=(k,v)=>{st.acct[k]=v;if(st.acct.checked){st.acct.checked=false;render();const e=$(k==="no"?"acNo":"acBank");if(e){e.focus()}}else upd()};
+window.checkAcct=()=>{if(String(st.acct.no).replace(/\D/g,"").length<6)return ptoast("Nhập số tài khoản, ít nhất 6 chữ số");st.acct.checked=true;render()};
+window.demoAcct=()=>{st.acct={bank:DEMO_ACCT.bank,no:DEMO_ACCT.no,checked:true};render()};
+/* Smart OTP nằm trong app ngân hàng: chuyển sang màn xác thực của Sacombank Pay, nhận kết quả về rồi chi trả */
+window.sendOtp=()=>toBank({type:"otp",code:codeFor(),amount:TOTAL,acct:`${st.acct.bank} ${mask(st.acct.no)}`});
+function payNow(){setClaim("Đã chi trả");go("paid")}
+
+/* ---- 8a. Đã chi trả ---- */
+function scrPaid(){
+ return {top:sbar("hub","09:19"),html:hubHead("Bồi thường",codeFor())+`<div class="body"><div class="hb-body">
+  <div class="card"><div class="paid"><span class="c">${I.check}</span><p class="ttl" style="font-size:17px;margin-top:8px">Đã chi trả bồi thường</p><div class="amt" style="font-size:26px">${vnd(TOTAL)}</div><span class="sub">Đã chuyển vào ${esc(st.acct.bank)} ${mask(st.acct.no)} · 09:19, 22/10/2026</span></div>
+   <table class="bt calc">${RES.map(p=>`<tr><td>${p.name} · <span class="code" style="font-size:11px;color:var(--p-muted)">${p.no}</span></td><td>${vnd(p.pay)}</td></tr>`).join("")}</table></div>
+  <div class="card"><p class="ttl" style="font-size:14px">Hành trình hồ sơ</p><div class="mtl">
+   <div><span>15:52 20/10</span>Tiếp nhận yêu cầu trên ví bảo hiểm, xác định GCN EI2026-40693306</div>
+   <div><span>15:52 20/10</span>Chuyển ${BANK} khóa và tra soát tài khoản</div>
+   <div><span>19:10 20/10</span>Bạn trình báo Công an</div>
+   <div><span>09:02 22/10</span>Đủ 6/6 chứng từ</div>
+   <div><span>09:03 22/10</span>${INSURER} kiểm tra xong, đủ điều kiện xử lý tự động</div>
+   <div><span>09:18 22/10</span>Bạn xác nhận phương án bằng Smart OTP</div>
+   <div><span>09:19 22/10</span><b>Đã chi trả ${vnd(TOTAL)}</b></div></div>
+   <div class="note ok">Từ lúc đủ chứng từ đến lúc nhận tiền: 17 phút.</div></div>
+ </div></div>`,foot:`<div class="foot"><button class="btn sec" onclick="go('hub',{tab:'bt'})">Về danh sách bồi thường</button>${homeBar}</div>`}
+}
+
+/* ---- 8b. Chuyển chuyên viên ---- */
+function scrCs(){
+ const out=isOut(), s=sc();
+ const s2=out?(s.hit?"Chuyên viên xác nhận điều khoản loại trừ":"Chuyên viên gọi lại để hiểu rõ sự việc"):"Chuyên viên kiểm tra hồ sơ";
+ const p2=out?(s.hit?`Đối chiếu nội dung bạn kể với điều khoản ${s.hit[0]}. Có thể gọi để hỏi thêm.`:"Hỏi thêm thời điểm, số tiền, kênh lừa đảo để xác định sự kiện."):"Xác minh mốc báo ngân hàng và việc bảo quản thẻ. Có thể gọi cho bạn để hỏi thêm.";
+ return {top:sbar("hub",out?"15:53":"09:03"),html:hubHead(out?"Tư vấn bồi thường":"Bồi thường",codeFor())+`<div class="body"><div class="hb-body">
+  <div class="route y"><span class="lt"></span><div><b>Chuyên viên iBaohiem đang xử lý</b><small>Liên hệ bạn trong 4 giờ làm việc<span class="pend">CHỜ CHỐT</span></small></div></div>
+  <div class="card"><p class="ttl" style="font-size:14px">Trạng thái</p><div class="tl">
+   <div class="tl-i"><span class="m dn">✓</span><div><b>${out?"Đã nhận yêu cầu tư vấn":"Đã nhận đủ chứng từ"}</b><p>${out?"15:53, 20/10/2026":"09:02, 22/10/2026 · 6/6 chứng từ"}</p></div></div>
+   <div class="tl-i"><span class="m wt">2</span><div><b>${s2}</b><p>${p2}</p></div></div>
+   <div class="tl-i"><span class="m nx">3</span><div><b>${out?"Trả lời chính thức":"Công ty bảo hiểm duyệt phương án"}</b><p>${out?"Nếu không thuộc điều khoản loại trừ, hồ sơ chuyển sang bồi thường như bình thường.":"Bạn nhận phương án trong app và xác nhận bằng OTP như luồng tự động."}</p></div></div>
+  </div></div>
+  <div class="card"><p class="ttl" style="font-size:14px">Bạn không cần nhập lại</p><p class="sub" style="color:var(--p-ink);font-size:12.5px">Chuyên viên đã có toàn bộ khai báo, ${out?"":"chứng từ và "}tóm tắt hồ sơ. Nếu cần, chuyên viên nhập bổ sung thay bạn.</p>
+   <div class="note">Hotline bồi thường 1900 xxxx (24/7)</div></div>
+  ${scamNote()}
+ </div></div>`,foot:`<div class="foot"><button class="btn sec" onclick="go('hub',{tab:'bt'})">Về danh sách bồi thường</button>${homeBar}</div>`}
+}
+
+/* ===== Sheet ===== */
+function sheetHTML(){
+ if(st.sheet==="police")return `<div class="sheetBg" onclick="if(event.target===this)closeSheet()"><div class="sheet" role="dialog" aria-label="Đơn trình báo"><span class="grab"></span>
+  <div class="aihd"><b style="color:var(--p-ai)">Đơn trình báo soạn sẵn</b><span class="pill ai">Từ khai báo của bạn</span></div>
+  <div class="draft">${esc(policeDraft())}</div>
+  <p class="sub" style="font-size:11.5px">Kiểm tra lại, in hoặc chép tay rồi nộp tại Công an phường nơi bạn ở.</p>
+  <div class="row2"><button class="btn sec" onclick="closeSheet()">Đóng</button><button class="btn acc" onclick="closeSheet();ptoast('Demo: đã lưu đơn trình báo vào điện thoại')">Lưu đơn</button></div></div></div>`;
+ if(st.sheet==="form"){const s=sc();return `<div class="sheetBg" onclick="if(event.target===this)closeSheet()"><div class="sheet" role="dialog" aria-label="Giấy yêu cầu bồi thường bảo hiểm"><span class="grab"></span>
+  <p class="ttl">Giấy yêu cầu bồi thường bảo hiểm</p>
+  <div class="kv"><div><div class="k">Người được BH</div><div class="v">${CUST.name}</div></div><div><div class="k">Số GCN</div><div class="v">${(s.gcns||[]).map(g=>g.no).join(", ")}</div></div>
+  <div class="full"><div class="k">Sự kiện</div><div class="v">${s.type}</div></div><div><div class="k">Xảy ra lúc</div><div class="v">${s.occ}</div></div><div><div class="k">Số tiền</div><div class="v">${s.amountTxt}</div></div>
+  <div class="full"><div class="k">Nội dung khai báo</div><div class="v" style="font-weight:500">${esc(st.narr||s.text)}</div></div>
+  <div class="full"><div class="k">Cam kết của người yêu cầu</div><div class="v" style="font-weight:500">✓ ${COMMIT_TXT}</div></div>
+  <div><div class="k">Xác nhận lúc</div><div class="v">15:52, 20/10/2026</div></div><div><div class="k">Mã toàn vẹn</div><div class="v code" style="font-size:11px">SHA-256 · 7f3a…c91e</div></div></div>
+  <button class="btn sec" onclick="closeSheet()">Đóng</button></div></div>`}
+ return "";
+}
+
+/* ===== Render ===== */
+const SCR={exclRecv:scrExclRecv,unclear:scrUnclear,sending:scrSending,sendErr:scrSendErr,received:scrReceived,hub:scrHub,declare:scrDeclare,analyzing:scrAnalyzing,aiResult:scrAiResult,guide:scrGuide,docs:scrDocs,review:scrReview,calc:scrCalc,paid:scrPaid,cs:scrCs};
+function render(){
+ const keep=document.querySelector("#screen .body");const sTop=keep?keep.scrollTop:0;const same=render._last===st.screen;
+ const r=SCR[st.screen]();
+ $("screen").innerHTML=r.top+r.html+(r.foot||"")+sheetHTML()+(st.toast?`<div class="ptoast">${esc(st.toast)}</div>`:"");
+ if(same){const b=document.querySelector("#screen .body");if(b)b.scrollTop=sTop}
+ render._last=st.screen;
+ report();
+}
+
+/* ===== Kết nối với app Sacombank Pay ===== */
+/* Trang này chạy trong WebView của app. App mở trang, nhận trạng thái hồ sơ và làm bước Smart OTP. */
+function toBank(msg){if(parent!==window)parent.postMessage(Object.assign({src:"ibh"},msg),"*")}
+window.closeHub=()=>{clearT();st.sheet=null;toBank({type:"close"})};
+function report(){
+ toBank({type:"state",stage:stageOf(),scen:st.scen,
+  claims:st.claims.map(c=>({code:c.code,status:c.status,past:c.scen==="past",gcn:c.scen==="past"?"EI2026-40693306":(((SC[c.scen].gcns||[])[0])||{}).no||""}))});
+}
+addEventListener("message",e=>{
+ const m=e.data||{};if(m.src!=="sbp")return;
+ if(m.type==="open")m.screen?go(m.screen,m.extra||{}):render();
+ if(m.type==="otpOk")payNow();
+ if(m.type==="scen")pickScen(m.key);
+ if(m.type==="jump")jump(m.n);
+ if(m.type==="reset"){clearT();st=S0();render()}
+});
+render();
+})();
+</script>
+</body>
+</html>

@@ -66,6 +66,16 @@ body.present .panel { margin-left: -320px; }
 .p-steps li.active { background: rgba(110, 168, 255, .12); color: #fff; font-weight: 600; }
 .p-steps li.active::before { background: var(--panel-accent); color: #0B1020; }
 .p-steps li.ins { }
+.p-steps li.jump { cursor: pointer; }
+.p-steps li.jump:hover { color: var(--panel-text); }
+.p-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 3px; border-radius: 10px; background: #141B33; border: 1px solid var(--panel-line); margin-bottom: 6px; }
+.p-seg button { border: 0; background: none; color: var(--panel-muted); font: inherit; font-size: 13px; font-weight: 600; padding: 8px; border-radius: 8px; cursor: pointer; }
+.p-seg button.on { background: var(--panel-accent); color: #0B1020; }
+.p-chips { display: flex; flex-direction: column; gap: 4px; }
+.p-label[hidden], .p-chips[hidden] { display: none; }
+.p-chip { display: flex; gap: 8px; align-items: center; text-align: left; border: 1px solid var(--panel-line); background: #141B33; color: var(--panel-text); font: inherit; font-size: 12.5px; padding: 7px 10px; border-radius: 9px; cursor: pointer; }
+.p-chip i { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.p-chip.on { border-color: var(--panel-accent); background: rgba(110, 168, 255, .12); }
 .p-steps li .tag { margin-left: auto; font-size: 10px; padding: 2px 6px; border-radius: 6px; background: rgba(167, 139, 250, .18); color: #C4B5FD; }
 .p-log {
   min-height: 90px; max-height: 200px; overflow-y: auto; font-size: 12px; line-height: 1.5;
@@ -131,6 +141,10 @@ body.present .panel { margin-left: -320px; }
 
 /* ============ APP ============ */
 .app { position: absolute; inset: 0; }
+/* WebView iBaohiem phủ màn hình app, chừa thanh trạng thái */
+.hub-view { position: absolute; left: 0; top: 54px; width: 100%; height: calc(100% - 54px); border: 0; z-index: 30; background: #f3f4f9; }
+.hub-view[hidden] { display: none; }
+body.native .hub-view { top: 0; height: 100%; }
 .scr { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--bg); animation: slideIn .28s ease; }
 .scr.fade { animation: fadeIn .25s ease; }
 @keyframes slideIn { from { transform: translateX(28px); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -422,7 +436,7 @@ body.present .panel { margin-left: -320px; }
 .mp-bar { height: 6px; border-radius: 3px; background: #EEF0F4; margin-top: 14px; overflow: hidden; }
 .mp-bar i { display: block; height: 100%; border-radius: 3px; background: var(--c); }
 .mp-left { font-size: 12px; color: var(--muted); margin-top: 6px; }
-.mp-claim { display: flex; gap: 8px; align-items: flex-start; font-size: 12px; line-height: 1.45; color: #9A6700; background: #FFF7E6; border-radius: 10px; padding: 9px 10px; margin-top: 12px; }
+.mp-claim { display: flex; gap: 8px; align-items: flex-start; font-size: 12px; line-height: 1.45; color: #9A6700; background: #FFF7E6; border-radius: 10px; padding: 9px 10px; margin-top: 12px; width: 100%; border: 0; text-align: left; font-family: inherit; cursor: pointer; }
 .mp-claim svg { flex-shrink: 0; margin-top: 1px; }
 .mp-act { display: flex; gap: 8px; margin-top: 12px; }
 .mp-act button { flex: 1; height: 40px; border-radius: 12px; font-size: 12.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; background: var(--soft); color: var(--p); }

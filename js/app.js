@@ -89,19 +89,27 @@
   /* ---------------- state ---------------- */
   let S;
   let logs = [];
-  function freshState(pid) {
+  // Kịch bản "claim": khách đã có sẵn hợp đồng (profile insurance.claimDemo), demo mở ở mục Bảo hiểm
+  const ymd = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+  function seedPolicies(p) {
+    const cd = p.insurance && p.insurance.claimDemo;
+    return cd ? cd.policies.map(x => ({ ...x, planIdx: 0, start: ymd(x.start), end: ymd(x.end), src: 'Mục Bảo hiểm', premium: 0, promo: null, seed: true })) : [];
+  }
+  function freshState(pid, mode) {
     const p = PROFILES[pid];
     const pl = (p.insurance && p.insurance.placements) || {};
+    const claim = mode === 'claim';
     return {
-      pid, screen: 'home', stack: [], hide: false,
+      pid, mode: claim ? 'claim' : 'buy', screen: claim ? 'hub' : 'home', stack: claim ? ['home'] : [], hide: false,
+      hubOpen: false, hubStage: 0, hubScen: 's1', hubClaims: [], claimOtp: null,
       balance: p.customer.balance,
       form: blankForm(p),
       addon: false, addonOk: false,
       otpFor: 'transfer', pin: '',
       txn: null,
       product: null, plan: 0, consent: false, productSrc: '',
-      policies: [], viewPolicy: null, policyFresh: false,
-      hubTab: 'mine', claims: [],
+      policies: claim ? seedPolicies(p) : [], viewPolicy: null, policyFresh: false,
+      hubTab: 'mine',
       on: {
         home: !!(pl.home && pl.home.enabled !== false),
         confirm: !!(pl.confirm && pl.confirm.enabled !== false),
@@ -117,6 +125,8 @@
   const prod = id => INS().products[id];
   const bankName = code => (P().banks.find(b => b.code === code) || { name: code }).name;
   const owns = id => S.policies.some(x => x.productId === id);
+  // Hợp đồng có sẵn mang gói, quyền lợi, phí riêng theo tài liệu
+  const planOf = pol => pol.plan || prod(pol.productId).plans[pol.planIdx];
 
   function confirmOffer() {
     const c = INS().placements.confirm;
@@ -166,14 +176,59 @@
       root.style.animation = 'none';
       const b = $('.body', app); if (b) b.scrollTop = scroll;
     }
-    const st = (sk.status && sk.status[S.screen]) || {};
-    screenEl.style.setProperty('--sbg', S.screen === 'product' ? prod(S.product).color : st.bg || 'var(--pd)');
-    screenEl.style.setProperty('--sbc', st.color || '#fff');
+    statusBar();
     const bind = (sk.bind && sk.bind[S.screen]) || BIND[S.screen];
     if (bind) bind();
     if (!quiet) trackView();
     renderSteps();
     notifyParent({ screen: S.screen });
+  }
+
+  function statusBar() {
+    const sk = skin(), st = S.hubOpen ? { bg: '#fff', color: '#161b2e' } : (sk.status && sk.status[S.screen]) || {};
+    screenEl.style.setProperty('--sbg', !S.hubOpen && S.screen === 'product' ? prod(S.product).color : st.bg || 'var(--pd)');
+    screenEl.style.setProperty('--sbc', st.color || '#fff');
+  }
+
+  /* ---------------- WebView Tra cứu và Bồi thường của iBaohiem ----------------
+   * Trang claim/index.html mở trong iframe phủ màn hình app, trao đổi qua postMessage:
+   * app gửi open / otpOk / scen / jump / reset, trang gửi về state / close / otp. */
+  const hubView = $('#hubView');
+  const toHub = msg => hubView.contentWindow && hubView.contentWindow.postMessage({ src: 'sbp', ...msg }, '*');
+  function openHub(msg) {
+    S.hubOpen = true; hubView.hidden = false; statusBar();
+    toHub({ type: 'open', ...(msg || {}) });
+    renderSteps();
+  }
+  function closeHub() {
+    S.hubOpen = false; hubView.hidden = true; S.hubStage = 0;
+    if (S.screen !== 'hub') { S.stack = ['home']; S.screen = 'hub'; S.hubTab = 'mine'; }
+    render(true);
+  }
+  window.addEventListener('message', e => {
+    const m = e.data || {};
+    if (m.src !== 'ibh' || e.source !== hubView.contentWindow) return;
+    if (m.type === 'state') {
+      m.claims.forEach(c => {
+        const old = S.hubClaims.find(x => x.code === c.code);
+        if (!c.past && (!old || old.status !== c.status)) log('claim', `Hồ sơ ${c.code}: ${c.status}`);
+      });
+      S.hubClaims = m.claims; S.hubScen = m.scen;
+      if (S.hubOpen) S.hubStage = m.stage;
+      renderSteps(); renderClaimScen();
+    }
+    if (m.type === 'close') closeHub();
+    if (m.type === 'otp') {
+      S.claimOtp = m; S.otpFor = 'claim'; S.pin = '';
+      S.hubOpen = false; hubView.hidden = true;
+      go('otp');
+    }
+  });
+  function finishClaimOtp() {
+    S.screen = S.stack.pop() || 'hub'; render(true);
+    openHub();
+    toHub({ type: 'otpOk' });
+    log('claim', `Xác nhận phương án bằng Smart OTP, nhận ${vnd(S.claimOtp.amount)} – hồ sơ ${S.claimOtp.code}`);
   }
 
   function trackView() {
@@ -431,14 +486,14 @@
   };
 
   SCREENS.otp = () => {
-    const isIns = S.otpFor === 'insurance';
+    const isIns = S.otpFor === 'insurance', isClaim = S.otpFor === 'claim';
     return `
     <div class="scr">
-      ${nav('Xác thực giao dịch')}
+      ${nav('Xác thực giao dịch', isClaim ? { backAct: 'claimOtpBack' } : {})}
       <div class="otp-wrap">
         <div class="otp-ic">${svg('lock', 34)}</div>
         <div class="otp-t">Nhập mã PIN Smart OTP</div>
-        <div class="otp-s">${isIns ? 'Xác thực thanh toán phí bảo hiểm' : 'Xác thực giao dịch chuyển tiền'}<br><b style="color:var(--text)">${vnd(isIns ? prod(S.product).plans[S.plan].premium : S.form.amount + addonCharge())}</b></div>
+        <div class="otp-s">${isClaim ? 'Xác nhận phương án bồi thường' : isIns ? 'Xác thực thanh toán phí bảo hiểm' : 'Xác thực giao dịch chuyển tiền'}<br><b style="color:var(--text)">${vnd(isClaim ? S.claimOtp.amount : isIns ? prod(S.product).plans[S.plan].premium : S.form.amount + addonCharge())}</b></div>
         <div class="dots" id="dots">${'<i></i>'.repeat(6)}</div>
         <div class="otp-hint">Demo: nhập 6 số bất kỳ</div>
       </div>
@@ -463,9 +518,9 @@
     const root = app.firstElementChild;
     const el = document.createElement('div');
     el.className = 'proc';
-    el.innerHTML = `<div class="ring"></div><p>${S.otpFor === 'insurance' ? 'Đang phát hành hợp đồng bảo hiểm…' : 'Đang xử lý giao dịch…'}</p>`;
+    el.innerHTML = `<div class="ring"></div><p>${S.otpFor === 'insurance' ? 'Đang phát hành hợp đồng bảo hiểm…' : S.otpFor === 'claim' ? 'Đang xác thực…' : 'Đang xử lý giao dịch…'}</p>`;
     root.appendChild(el);
-    setTimeout(S.otpFor === 'insurance' ? finishPurchase : finishTransfer, 1300);
+    setTimeout(S.otpFor === 'insurance' ? finishPurchase : S.otpFor === 'claim' ? finishClaimOtp : finishTransfer, 1300);
   }
 
   function createPolicy(productId, planIdx, src, promo) {
@@ -605,7 +660,7 @@
   };
 
   SCREENS.policy = () => {
-    const pol = S.viewPolicy, pr = prod(pol.productId), plan = pr.plans[pol.planIdx], c = P().customer;
+    const pol = S.viewPolicy, pr = prod(pol.productId), plan = planOf(pol), c = P().customer;
     return `
     <div class="scr ${S.policyFresh ? 'fade' : ''}">
       ${S.policyFresh ? `
@@ -622,8 +677,8 @@
           <div class="cg">
             <div>Người được BH<b>${esc(c.name)}</b></div>
             <div>Gói<b>${esc(plan.name)}</b></div>
-            <div>Quyền lợi tối đa<b>${vnd(plan.coverage)}</b></div>
-            <div>Phí đã thanh toán<b>${vnd(pol.premium)}${pol.promo ? ' (quà tặng)' : ''}</b></div>
+            <div>Quyền lợi tối đa<b>${pol.maxText ? esc(pol.maxText) : vnd(plan.coverage)}</b></div>
+            <div>Phí đã thanh toán<b>${pol.feeText ? esc(pol.feeText) : vnd(pol.premium)}${pol.promo ? ' (quà tặng)' : ''}</b></div>
             <div>Hiệu lực từ<b>${dstr(pol.start)}</b></div>
             <div>Đến<b>${dstr(pol.end)}</b></div>
           </div>
@@ -648,12 +703,13 @@
 
   SCREENS.hub = () => {
     const ins = INS(), mine = S.hubTab !== 'shop', now = Date.now();
-    const totalCover = S.policies.reduce((t, pol) => t + prod(pol.productId).plans[pol.planIdx].coverage, 0);
+    const totalCover = S.policies.reduce((t, pol) => t + planOf(pol).coverage, 0);
     const polCard = pol => {
-      const pr = prod(pol.productId), plan = pr.plans[pol.planIdx];
+      const pr = prod(pol.productId), plan = planOf(pol);
       const left = Math.max(0, Math.ceil((pol.end - now) / 86400000));
       const used = Math.min(100, Math.max(2, Math.round((now - pol.start) / (pol.end - pol.start) * 100)));
-      const claim = S.claims.find(c => c.policyNo === pol.no);
+      // Hồ sơ bồi thường đang mở của hợp đồng này, lấy từ trang Bồi thường của iBaohiem
+      const claim = S.hubClaims.find(c => !c.past && c.gcn === pol.no);
       return `
       <div class="mp" style="--c:${pr.color}">
         <div class="mp-h">
@@ -663,16 +719,16 @@
         </div>
         <div class="mp-g">
           <div><small>Số hợp đồng</small><b>${pol.no}</b></div>
-          <div><small>Quyền lợi tối đa</small><b>${vnd(plan.coverage)}</b></div>
+          <div><small>Quyền lợi tối đa</small><b>${pol.maxText ? esc(pol.maxText) : vnd(plan.coverage)}</b></div>
           <div><small>Hiệu lực</small><b>${dstr(pol.start)} – ${dstr(pol.end)}</b></div>
-          <div><small>Phí đã đóng</small><b>${vnd(pol.premium)}${pol.promo ? ' (tặng)' : ''}</b></div>
+          <div><small>Phí đã đóng</small><b>${pol.feeText ? esc(pol.feeText) : vnd(pol.premium)}${pol.promo ? ' (tặng)' : ''}</b></div>
         </div>
         <div class="mp-bar"><i style="width:${used}%"></i></div>
         <div class="mp-left">Còn ${left} ngày bảo vệ</div>
-        ${claim ? `<div class="mp-claim">${svg('clock', 16)}<span>Yêu cầu bồi thường <b>${claim.no}</b> đang được xử lý, dự kiến phản hồi trong 5 ngày làm việc.</span></div>` : ''}
+        ${claim ? `<button class="mp-claim" data-act="claim" data-no="${pol.no}">${svg(claim.status === 'Đã chi trả' ? 'check' : 'clock', 16)}<span>Yêu cầu bồi thường <b>${claim.code}</b>: ${esc(claim.status)}</span></button>` : ''}
         <div class="mp-act">
           <button data-act="viewPolicy" data-no="${pol.no}">${svg('file', 17)} Giấy chứng nhận</button>
-          <button data-act="claim" data-no="${pol.no}" ${claim ? 'disabled' : ''}>${svg('shield', 17)} Yêu cầu bồi thường</button>
+          <button data-act="claim" data-no="${pol.no}">${svg('shield', 17)} Yêu cầu bồi thường</button>
         </div>
       </div>`;
     };
@@ -699,7 +755,7 @@
           <button class="btn primary" data-act="hubTab" data-tab="shop">Khám phá sản phẩm</button>
         </div>`) : `
         <div class="xsell" style="margin-top:0">
-          ${Object.keys(ins.products).map(id => xsCard(id, 'Mục Bảo hiểm')).join('')}
+          ${Object.keys(ins.products).filter(id => !ins.products[id].hidden).map(id => xsCard(id, 'Mục Bảo hiểm')).join('')}
         </div>`}
         <button class="mp-help" data-act="toast" data-msg="Tổng đài chỉ minh họa trong bản demo">${svg('phone', 18)}<span>Cần hỗ trợ bồi thường?<small>Gọi tổng đài 1900 xxxx (24/7)</small></span>${svg('chev', 18)}</button>
         <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:12px">Sản phẩm được cung cấp bởi ${esc(ins.provider)}</div>
@@ -820,33 +876,14 @@
     },
     hubTab: d => { S.hubTab = d.tab; render(true); },
     myPolicies: () => { S.hubTab = 'mine'; go('hub'); },
+    // Yêu cầu bồi thường: mở trang Tra cứu và Bồi thường của iBaohiem trong WebView, tab Bồi thường
     claim: d => {
       const pol = S.policies.find(x => x.no === d.no); if (!pol) return;
-      const pr = prod(pol.productId);
-      const reasons = ['Bị lừa đảo, mất tiền', 'Tai nạn', 'Ốm đau, nằm viện', 'Lý do khác'];
-      openSheet('Yêu cầu bồi thường', `
-        <div class="card" style="background:var(--soft)"><div class="rows">
-          <div class="r"><span>Sản phẩm</span><span>${esc(pr.name)}</span></div>
-          <div class="r"><span>Số hợp đồng</span><span>${pol.no}</span></div>
-          <div class="r"><span>Người được bảo hiểm</span><span>${esc(P().customer.name)}</span></div>
-        </div></div>
-        <div class="lbl" style="margin-top:14px">Sự kiện bảo hiểm</div>
-        <div class="chips" id="claimReasons">${reasons.map((r, i) => `<button class="chip ${i ? '' : 'sel'}" data-act="claimReason">${r}</button>`).join('')}</div>
-        <div class="field"><label for="claimNote">Mô tả ngắn</label><textarea id="claimNote" rows="2" placeholder="Thời gian, địa điểm, diễn biến"></textarea></div>
-        <button class="field" data-act="toast" data-msg="Tải chứng từ chỉ minh họa trong bản demo"><span class="fl">Chứng từ</span><span class="fv ph">Chụp hoặc tải ảnh hóa đơn, biên bản ${svg('chev', 18)}</span></button>
-        <button class="btn primary" data-act="claimSend" data-no="${pol.no}">Gửi yêu cầu</button>`);
+      if (!pol.seed) { loadProfile(S.pid, 'claim'); }
+      log('click', `Yêu cầu bồi thường – "${prod(pol.productId).short}"`);
+      openHub({ screen: 'hub', extra: { tab: 'bt' } });
     },
-    claimReason: (d, el) => {
-      el.parentNode.querySelectorAll('.chip').forEach(c => c.classList.toggle('sel', c === el));
-    },
-    claimSend: d => {
-      const pol = S.policies.find(x => x.no === d.no);
-      const c = { no: 'BT' + rnd(8), policyNo: d.no, time: new Date() };
-      S.claims.push(c);
-      log('claim', `Gửi yêu cầu bồi thường ${c.no} – "${prod(pol.productId).short}"`);
-      render(true);
-      toast('Đã gửi yêu cầu bồi thường');
-    },
+    claimOtpBack: () => { back(); openHub(); },
     viewPolicy: d => {
       S.viewPolicy = S.policies.find(x => x.no === d.no); S.policyFresh = false;
       go('policy');
@@ -883,21 +920,57 @@
     { k: 'product', t: 'Xem & mua bảo hiểm', tag: 'Mua 1 chạm' },
     { k: 'policy', t: 'Nhận GCN điện tử' }
   ];
+  // Kịch bản bồi thường: 8 bước và các tình huống theo tài liệu demo bồi thường iBaohiem
+  const CLAIM_STEPS = ['Ví bảo hiểm', 'Tra cứu hợp đồng', 'Kể lại sự việc', 'AI xếp loại sự kiện', 'Hướng dẫn và mốc thời gian', 'Chứng từ', 'Phương án và xác nhận', 'Chi trả hoặc chuyển chuyên viên'];
+  const CLAIM_SCENS = [
+    ['s1', 'Bấm link lạ, mất 50 triệu', '#11805a'], ['s2', 'Mất ví, thẻ bị quẹt', '#9a6100'],
+    ['s3', 'Tự chuyển tiền cho người quen vay', '#b4372f'], ['s4', 'Đọc OTP cho người giả danh ngân hàng', '#b4372f'],
+    ['unk', 'Chưa xác định được sự kiện', '#6b7285'], ['s5', 'Lỗi gửi, không ghi nhận được', '#b4372f'], ['s6', 'Gửi được, lỗi phân tích tự động', '#9a6100']
+  ];
   function stepIndex() {
     if (S.screen === 'otp' && S.otpFor === 'insurance') return 5;
     const i = STEPS.findIndex(s => s.k === S.screen);
     return i;
   }
   function renderSteps() {
+    if (S.mode === 'claim') {
+      const c = S.hubOpen ? S.hubStage : S.screen === 'otp' ? 6 : 0;
+      $('#steps').innerHTML = CLAIM_STEPS.map((t, i) =>
+        `<li class="jump ${i === c ? 'active' : i < c ? 'done' : ''}" data-n="${i}">${t}</li>`).join('');
+      return;
+    }
     const cur = stepIndex();
     if (cur >= 0) renderSteps.last = cur;
     const c = renderSteps.last || 0;
     $('#steps').innerHTML = STEPS.map((s, i) =>
       `<li class="${i === c ? 'active' : i < c ? 'done' : ''}">${s.t}${s.tag ? `<span class="tag">${s.tag}</span>` : ''}</li>`).join('');
   }
+  function renderClaimScen() {
+    const box = $('#claimScen'), claim = S.mode === 'claim';
+    box.hidden = !claim; $('#claimScenLbl').hidden = !claim;
+    if (claim) box.innerHTML = CLAIM_SCENS.map(([k, t, c]) =>
+      `<button class="p-chip ${S.hubScen === k ? 'on' : ''}" data-k="${k}"><i style="background:${c}"></i>${t}</button>`).join('');
+    document.querySelectorAll('#modeSeg button').forEach(b => b.classList.toggle('on', b.dataset.mode === S.mode));
+  }
+  $('#steps').addEventListener('click', e => {
+    const li = e.target.closest('li.jump'); if (!li) return;
+    const n = +li.dataset.n;
+    if (S.screen === 'otp') { S.screen = S.stack.pop() || 'hub'; render(true); }
+    if (n === 0) { if (S.hubOpen) closeHub(); else { S.stack = ['home']; S.screen = 'hub'; S.hubTab = 'mine'; render(); } return; }
+    if (S.screen !== 'hub') { S.stack = ['home']; S.screen = 'hub'; S.hubTab = 'mine'; render(true); }
+    openHub(); toHub({ type: 'jump', n });
+  });
+  $('#claimScen').addEventListener('click', e => {
+    const b = e.target.closest('[data-k]'); if (!b) return;
+    S.hubScen = b.dataset.k; renderClaimScen();
+    toHub({ type: 'scen', key: b.dataset.k });
+  });
+  $('#modeSeg').addEventListener('click', e => {
+    const b = e.target.closest('[data-mode]'); if (b && b.dataset.mode !== S.mode) loadProfile(S.pid, b.dataset.mode);
+  });
   function renderLog() {
     const el = $('#eventLog');
-    if (!logs.length) { el.innerHTML = '<span class="empty">Các lượt hiển thị / chọn / mua bảo hiểm sẽ hiện ở đây.</span>'; return; }
+    if (!logs.length) { el.innerHTML = `<span class="empty">${S.mode === 'claim' ? 'Các bước của hồ sơ bồi thường sẽ hiện ở đây.' : 'Các lượt hiển thị / chọn / mua bảo hiểm sẽ hiện ở đây.'}</span>`; return; }
     el.innerHTML = logs.map(l => `<div><span class="t">${tstr(l.t).slice(0, 5)}</span><span class="ev ${l.type === 'buy' ? 'buy' : ''}">${esc(l.msg)}</span></div>`).join('');
     el.scrollTop = el.scrollHeight;
   }
@@ -930,14 +1003,18 @@
     $('#demoNote').textContent = `BẢN DEMO minh họa – không phải ứng dụng chính thức của ${P().name.split(' – ')[0]}`;
   }
 
-  function loadProfile(pid) {
+  function loadProfile(pid, mode) {
     if (!PROFILES[pid]) pid = PROFILE_IDS[0];
-    S = freshState(pid);
+    if (mode === 'claim' && !(PROFILES[pid].insurance || {}).claimDemo) mode = 'buy';
+    S = freshState(pid, mode);
     logs = []; renderSteps.last = 0;
+    hubView.hidden = true; toHub({ type: 'reset' });
     store.set('ei-demo-partner', pid);
-    const url = new URL(location.href); url.searchParams.set('partner', pid); history.replaceState(null, '', url);
+    const url = new URL(location.href); url.searchParams.set('partner', pid);
+    if (S.mode === 'claim') url.searchParams.set('mode', 'claim'); else url.searchParams.delete('mode');
+    history.replaceState(null, '', url);
     $('#partnerSelect').value = pid;
-    applyTheme(); renderPanel(); renderLog(); render();
+    applyTheme(); renderPanel(); renderLog(); renderClaimScen(); render();
   }
 
   /* ---------------- device scaling & chrome ---------------- */
@@ -966,7 +1043,7 @@
   }
   $('#partnerSelect').innerHTML = PROFILE_IDS.map(id => `<option value="${id}">${esc(PROFILES[id].name)}</option>`).join('');
   $('#partnerSelect').addEventListener('change', e => loadProfile(e.target.value));
-  $('#btnReset').addEventListener('click', () => loadProfile(S.pid));
+  $('#btnReset').addEventListener('click', () => loadProfile(S.pid, S.mode));
   $('#clearLog').addEventListener('click', () => { logs = []; renderLog(); });
   const togglePresent = () => { document.body.classList.toggle('present'); setTimeout(fit, 320); };
   $('#btnPresent').addEventListener('click', togglePresent);
@@ -986,8 +1063,8 @@
   });
   window.addEventListener('resize', fit);
 
-  const qp = new URLSearchParams(location.search).get('partner');
-  loadProfile(qp || store.get('ei-demo-partner') || PROFILE_IDS[0]);
+  const qs = new URLSearchParams(location.search);
+  loadProfile(qs.get('partner') || store.get('ei-demo-partner') || PROFILE_IDS[0], qs.get('mode'));
   fit(); clock(); setInterval(clock, 15000);
   requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.add('ready')));
 })();

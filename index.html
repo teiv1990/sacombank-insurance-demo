@@ -31,7 +31,14 @@
       <div class="p-toggles" id="placementToggles"></div>
 
       <div class="p-label">Kịch bản demo</div>
+      <div class="p-seg" id="modeSeg">
+        <button data-mode="buy">Mua bảo hiểm</button>
+        <button data-mode="claim">Bồi thường</button>
+      </div>
       <ol class="p-steps" id="steps"></ol>
+
+      <div class="p-label" id="claimScenLbl" hidden>Tình huống bồi thường</div>
+      <div class="p-chips" id="claimScen" hidden></div>
 
       <div class="p-label">Sự kiện bảo hiểm <button class="p-link" id="clearLog">Xóa</button></div>
       <div class="p-log" id="eventLog"></div>
@@ -59,6 +66,8 @@
               </span>
             </div>
             <div class="app" id="app"></div>
+            <!-- WebView: trang Tra cứu và Bồi thường của iBaohiem -->
+            <iframe class="hub-view" id="hubView" src="claim/index.html" title="iBaohiem – Tra cứu và Bồi thường" hidden></iframe>
             <div class="sheet-backdrop" id="sheetBackdrop"></div>
             <div class="sheet" id="sheet"></div>
             <div class="toast" id="toast"></div>
